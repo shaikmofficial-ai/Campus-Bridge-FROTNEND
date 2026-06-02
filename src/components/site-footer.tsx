@@ -1,9 +1,9 @@
 import { Link } from "@tanstack/react-router";
 import logo from "@/assets/mgr-logo.png";
-
+x
 export function SiteFooter() {
   return (
-    <footer className="mt-24 border-t border-border/60 bg-surface">
+    <footer className="mt-24 border-t border-border/60 bg-surface" style={{ background: "#0B1220" }}>
       <div className="mx-auto max-w-7xl px-5 lg:px-8 py-14 grid gap-10 md:grid-cols-4">
         <div className="md:col-span-2">
           <div className="flex items-center gap-3">
