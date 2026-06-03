@@ -12,7 +12,7 @@ export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
       { title: "CampusBridge — Connect. Learn. Grow Together." },
-      { name: "description", content: "Secure mentorship and alumni networking platform for Dr. M.G.R. University students, seniors and alumni." },
+      { name: "description", content: "Connect with alumni, discover opportunities, and grow through a trusted university network." },
     ],
   }),
   component: LandingPage,
