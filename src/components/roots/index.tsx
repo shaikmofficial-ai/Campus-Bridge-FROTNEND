@@ -53,8 +53,7 @@ function Hero() {
             <span className="text-gradient-primary">Grow Together.</span>
           </h1>
           <p className="mt-6 text-lg text-muted-foreground max-w-xl leading-relaxed">
-            A secure mentorship and alumni networking platform exclusively for
-            Dr. M.G.R. University students, seniors and alumni.
+            Connect with alumni, discover opportunities,and grow through a trusted university network.
           </p>
 
           <div className="mt-8 flex flex-wrap gap-3">
