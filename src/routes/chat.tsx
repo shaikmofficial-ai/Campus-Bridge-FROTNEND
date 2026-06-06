@@ -3,7 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { AppShell } from "@/components/app-shell";
-import { Send, Search, Loader2, MessageSquare, Flag } from "lucide-react";
+import { Send, Search, Loader2, MessageSquare, Flag, Lock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -80,8 +80,31 @@ function Chat() {
     ? active.participants?.find((p) => p.id !== myId)
     : undefined;
 
+  const pendingApproval =
+    !!meQ.data && meQ.data.role !== "ADMIN" && meQ.data.accountStatus !== "APPROVED";
+
+  if (pendingApproval) {
+    return (
+      <AppShell title="Messages" subtitle="Secure chat with mentors, peers and groups.">
+        <div className="rounded-3xl border border-dashed border-border bg-card p-10 text-center max-w-xl mx-auto">
+          <div className="size-12 grid place-items-center rounded-2xl bg-warning/15 text-warning mx-auto mb-4">
+            <Lock className="size-6" />
+          </div>
+          <h2 className="text-lg font-semibold">Chat is locked</h2>
+          <p className="text-sm text-muted-foreground mt-2">
+            Your account is pending admin approval. Once an admin approves you, you'll be able to
+            message mentors and peers you're connected with.
+          </p>
+        </div>
+      </AppShell>
+    );
+  }
+
   return (
     <AppShell title="Messages" subtitle="Secure chat with mentors, peers and groups.">
+      <p className="text-xs text-muted-foreground mb-3">
+        You can only chat with people you're connected with. Send a request from the Mentors page first.
+      </p>
       <div className="rounded-3xl border border-border bg-card overflow-hidden grid md:grid-cols-[320px_1fr] min-h-[560px]">
         <aside className="border-r border-border flex flex-col">
           <div className="p-3 border-b border-border">

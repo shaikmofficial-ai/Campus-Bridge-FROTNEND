@@ -11,7 +11,7 @@ import {
   Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle,
 } from "@/components/ui/dialog";
 import { Globe, Lock, MessageCircle, Eye, Plus, Loader2, AlertCircle } from "lucide-react";
-import { forumApi } from "@/lib/api/campus";
+import { forumApi, profileApi } from "@/lib/api/campus";
 import { avatarUrl, timeAgo } from "@/lib/ui";
 import type { ForumGroup, ForumPost } from "@/lib/api/types";
 
@@ -29,12 +29,21 @@ function Forum() {
 
   const postsQ = useQuery({ queryKey: ["forum", "public"], queryFn: forumApi.publicPosts });
   const groupsQ = useQuery({ queryKey: ["forum", "groups"], queryFn: forumApi.groups });
+  const meQ = useQuery({ queryKey: ["profile", "me"], queryFn: profileApi.me });
+
+  const canWrite = !meQ.data || meQ.data.role === "ADMIN" || meQ.data.accountStatus === "APPROVED";
 
   const posts = postsQ.data ?? [];
   const groups = groupsQ.data ?? [];
 
   return (
     <AppShell title="Community Forum" subtitle="Discuss, ask, share — across batches and departments.">
+      {!canWrite && (
+        <div className="rounded-2xl border border-warning/30 bg-warning/10 p-4 text-sm text-foreground mb-5 flex items-start gap-2">
+          <Lock className="size-4 mt-0.5 text-warning shrink-0" />
+          <span>Your account is pending admin approval. You can read everything, but posting and commenting unlock once an admin approves you.</span>
+        </div>
+      )}
       <div className="rounded-2xl border border-border bg-card p-2 flex items-center justify-between mb-6">
         <div className="flex items-center gap-1 p-1">
           <button
@@ -50,7 +59,7 @@ function Forum() {
             <Lock className="size-4" /> Groups
           </button>
         </div>
-        <Button onClick={() => setCreating(true)} className="rounded-full bg-gradient-primary text-primary-foreground">
+        <Button onClick={() => setCreating(true)} disabled={!canWrite} className="rounded-full bg-gradient-primary text-primary-foreground">
           <Plus className="size-4" /> New Post
         </Button>
       </div>
@@ -107,7 +116,7 @@ function Forum() {
       )}
 
       <NewPostDialog open={creating} onOpenChange={setCreating} groups={groups} />
-      <CommentDialog post={commentPost} onClose={() => setCommentPost(null)} />
+      <CommentDialog post={commentPost} onClose={() => setCommentPost(null)} canWrite={canWrite} />
     </AppShell>
   );
 }
@@ -195,7 +204,7 @@ function NewPostDialog({ open, onOpenChange, groups }: { open: boolean; onOpenCh
   );
 }
 
-function CommentDialog({ post, onClose }: { post: ForumPost | null; onClose: () => void }) {
+function CommentDialog({ post, onClose, canWrite }: { post: ForumPost | null; onClose: () => void; canWrite: boolean }) {
   const queryClient = useQueryClient();
   const [content, setContent] = useState("");
 
@@ -218,15 +227,23 @@ function CommentDialog({ post, onClose }: { post: ForumPost | null; onClose: () 
           <DialogDescription>{post?.author?.name ? `By ${post.author.name}` : ""}</DialogDescription>
         </DialogHeader>
         {post?.content && <p className="text-sm text-muted-foreground leading-relaxed whitespace-pre-wrap">{post.content}</p>}
-        <div className="space-y-2 mt-2">
-          <Label htmlFor="comment">Add a comment</Label>
-          <Textarea id="comment" value={content} onChange={(e) => setContent(e.target.value)} rows={3} placeholder="Share your thoughts…" />
-        </div>
+        {canWrite ? (
+          <div className="space-y-2 mt-2">
+            <Label htmlFor="comment">Add a comment</Label>
+            <Textarea id="comment" value={content} onChange={(e) => setContent(e.target.value)} rows={3} placeholder="Share your thoughts…" />
+          </div>
+        ) : (
+          <div className="rounded-xl border border-warning/30 bg-warning/10 px-3.5 py-2.5 text-sm text-foreground mt-2 flex items-center gap-2">
+            <Lock className="size-4 text-warning shrink-0" /> Commenting unlocks after an admin approves your account.
+          </div>
+        )}
         <DialogFooter>
           <Button variant="outline" onClick={onClose}>Close</Button>
-          <Button onClick={() => mutation.mutate()} disabled={mutation.isPending || !content.trim()} className="bg-gradient-primary text-primary-foreground">
-            {mutation.isPending ? <><Loader2 className="mr-1 size-4 animate-spin" /> Posting…</> : "Comment"}
-          </Button>
+          {canWrite && (
+            <Button onClick={() => mutation.mutate()} disabled={mutation.isPending || !content.trim()} className="bg-gradient-primary text-primary-foreground">
+              {mutation.isPending ? <><Loader2 className="mr-1 size-4 animate-spin" /> Posting…</> : "Comment"}
+            </Button>
+          )}
         </DialogFooter>
       </DialogContent>
     </Dialog>
