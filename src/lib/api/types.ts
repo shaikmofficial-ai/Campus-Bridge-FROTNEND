@@ -160,6 +160,22 @@ export interface ForumGroup {
   memberCount: number;
 }
 
+export interface ForumComment {
+  id: number;
+  content: string;
+  createdAt?: string;
+  authorId?: number;
+  authorName?: string;
+  authorRole?: string;
+  authorProfilePictureUrl?: string;
+}
+
+export interface ForumGroupPayload {
+  name: string;
+  description?: string;
+  isPrivate: boolean;
+}
+
 export interface ForumPostPayload {
   title: string;
   content: string;

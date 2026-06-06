@@ -9,6 +9,8 @@ import type {
   DashboardResponse,
   ExternalJob,
   ForumGroup,
+  ForumComment,
+  ForumGroupPayload,
   ForumPost,
   ForumPostPayload,
   Message,
@@ -65,6 +67,13 @@ export const mentorApi = {
 export const forumApi = {
   publicPosts: () => apiFetch<ForumPost[]>("/api/forum/public"),
   groups: () => apiFetch<ForumGroup[]>("/api/forum/groups"),
+  createGroup: (payload: ForumGroupPayload) =>
+    apiFetch<ForumGroup>("/api/forum/groups", {
+      method: "POST",
+      // Backend's isPrivate is a Lombok boolean -> Jackson key "private". Send both.
+      body: { name: payload.name, description: payload.description, private: payload.isPrivate, isPrivate: payload.isPrivate },
+    }),
+  groupPosts: (groupId: number) => apiFetch<ForumPost[]>(`/api/forum/groups/${groupId}/posts`),
   createPost: (payload: ForumPostPayload) =>
     apiFetch<ForumPost>("/api/forum/posts", {
       method: "POST",
@@ -82,6 +91,7 @@ export const forumApi = {
     }),
   addComment: (postId: number, content: string) =>
     apiFetch(`/api/forum/posts/${postId}/comments`, { method: "POST", body: { content } }),
+  comments: (postId: number) => apiFetch<ForumComment[]>(`/api/forum/posts/${postId}/comments`),
   viewPost: (postId: number) => apiFetch<ForumPost>(`/api/forum/posts/${postId}`),
 };
 

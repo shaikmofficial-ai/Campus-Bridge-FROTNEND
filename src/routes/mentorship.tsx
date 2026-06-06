@@ -30,6 +30,7 @@ function Mentorship() {
   const mentorsQ = useQuery({
     queryKey: ["mentors", keyword],
     queryFn: () => mentorApi.list({ keyword: keyword || undefined }),
+    enabled: !isMentor,
   });
   const connectionsQ = useQuery({ queryKey: ["mentor-connections"], queryFn: mentorApi.connections });
   const pendingQ = useQuery({
@@ -76,14 +77,24 @@ function Mentorship() {
         <div className="relative grid md:grid-cols-[1.2fr_1fr] gap-6 items-center">
           <div>
             <h2 className="text-3xl md:text-4xl font-bold tracking-tight">
-              Find your next <span className="text-gradient-primary">mentor</span>.
+              {isMentor ? (
+                <>Guide your <span className="text-gradient-primary">mentees</span>.</>
+              ) : (
+                <>Find your next <span className="text-gradient-primary">mentor</span>.</>
+              )}
             </h2>
             <p className="mt-2 text-sm text-muted-foreground max-w-md">
-              Connect with experienced alumni and seniors who can guide your journey.
+              {isMentor
+                ? "Review connection requests and support the students who reached out to you."
+                : "Connect with experienced alumni and seniors who can guide your journey."}
             </p>
           </div>
           <div className="grid grid-cols-3 gap-3">
-            <Stat icon={Users} label="Mentors" value={mentors.length} />
+            {isMentor ? (
+              <Stat icon={Users} label="Mentees" value={connections.filter((c) => c.status === "ACCEPTED").length} />
+            ) : (
+              <Stat icon={Users} label="Mentors" value={mentors.length} />
+            )}
             <Stat icon={GraduationCap} label="Connections" value={connections.length} />
             <Stat icon={Briefcase} label={isMentor ? "Requests" : "Pending"} value={isMentor ? pending.length : connections.filter((c) => c.status === "PENDING").length} />
           </div>
@@ -156,78 +167,83 @@ function Mentorship() {
         )}
       </section>
 
-      {/* Search */}
-      <form
-        onSubmit={(e) => { e.preventDefault(); setKeyword(search.trim()); }}
-        className="rounded-2xl border border-border bg-card p-3 flex items-center gap-2 mb-6"
-      >
-        <Search className="size-4 text-muted-foreground ml-2" />
-        <input
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          placeholder="Search by name, company, skill…"
-          className="flex-1 bg-transparent outline-none text-sm py-1.5"
-        />
-        <Button type="submit" className="rounded-full bg-gradient-primary text-primary-foreground">Search</Button>
-      </form>
+      {/* Mentor discovery — students only */}
+      {!isMentor && (
+        <>
+          {/* Search */}
+          <form
+            onSubmit={(e) => { e.preventDefault(); setKeyword(search.trim()); }}
+            className="rounded-2xl border border-border bg-card p-3 flex items-center gap-2 mb-6"
+          >
+            <Search className="size-4 text-muted-foreground ml-2" />
+            <input
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Search by name, company, skill…"
+              className="flex-1 bg-transparent outline-none text-sm py-1.5"
+            />
+            <Button type="submit" className="rounded-full bg-gradient-primary text-primary-foreground">Search</Button>
+          </form>
 
-      {/* Mentor directory */}
-      <section>
-        <h3 className="font-semibold mb-3">Meet Your Mentors</h3>
-        {mentorsQ.isLoading ? (
-          <Loading />
-        ) : mentorsQ.isError ? (
-          <div className="rounded-2xl border border-destructive/30 bg-destructive/10 p-5 text-sm text-destructive flex items-center gap-2">
-            <AlertCircle className="size-4" /> {mentorsQ.error instanceof Error ? mentorsQ.error.message : "Failed to load mentors."}
-          </div>
-        ) : mentors.length === 0 ? (
-          <Empty text="No mentors found. Try a different search." />
-        ) : (
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-            {mentors.map((m: MentorResponse) => (
-              <div key={m.id} className="group relative rounded-2xl border border-border bg-card p-5 hover:shadow-elegant transition-all">
-                <div className="flex items-start gap-3">
-                  <img src={avatarUrl(m.profilePicture, m.id)} alt="" className="size-14 rounded-full object-cover ring-2 ring-card" />
-                  <div className="flex-1 min-w-0">
-                    <div className="font-semibold leading-tight truncate">{m.name}</div>
-                    <div className="text-xs text-muted-foreground truncate">
-                      {[m.designation, m.company].filter(Boolean).join(" · ") || "Mentor"}
-                    </div>
-                    {m.rating > 0 && (
-                      <div className="mt-1 flex items-center gap-1 text-xs text-muted-foreground">
-                        <Star className="size-3 fill-warning text-warning" /> {m.rating.toFixed(1)}
-                        {m.reviewCount > 0 && <span>({m.reviewCount})</span>}
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                {(m.skills?.length || m.domains?.length) ? (
-                  <div className="mt-3 flex flex-wrap gap-1">
-                    {[...(m.skills ?? []), ...(m.domains ?? [])].slice(0, 4).map((tag) => (
-                      <span key={tag} className="text-[10px] uppercase rounded-full bg-accent text-primary px-2 py-0.5 font-medium">{tag}</span>
-                    ))}
-                  </div>
-                ) : null}
-
-                <div className="mt-4 flex gap-2">
-                  <Button size="sm" variant="outline" className="rounded-full flex-1" onClick={() => startChat.mutate(m.id)}>
-                    Message
-                  </Button>
-                  <Button
-                    size="sm"
-                    className="rounded-full flex-1 bg-gradient-primary text-primary-foreground"
-                    disabled={connect.isPending || isMentor}
-                    onClick={() => connect.mutate(m.id)}
-                  >
-                    Connect
-                  </Button>
-                </div>
+          {/* Mentor directory */}
+          <section>
+            <h3 className="font-semibold mb-3">Meet Your Mentors</h3>
+            {mentorsQ.isLoading ? (
+              <Loading />
+            ) : mentorsQ.isError ? (
+              <div className="rounded-2xl border border-destructive/30 bg-destructive/10 p-5 text-sm text-destructive flex items-center gap-2">
+                <AlertCircle className="size-4" /> {mentorsQ.error instanceof Error ? mentorsQ.error.message : "Failed to load mentors."}
               </div>
-            ))}
-          </div>
-        )}
-      </section>
+            ) : mentors.length === 0 ? (
+              <Empty text="No mentors found. Try a different search." />
+            ) : (
+              <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                {mentors.map((m: MentorResponse) => (
+                  <div key={m.id} className="group relative rounded-2xl border border-border bg-card p-5 hover:shadow-elegant transition-all">
+                    <div className="flex items-start gap-3">
+                      <img src={avatarUrl(m.profilePicture, m.id)} alt="" className="size-14 rounded-full object-cover ring-2 ring-card" />
+                      <div className="flex-1 min-w-0">
+                        <div className="font-semibold leading-tight truncate">{m.name}</div>
+                        <div className="text-xs text-muted-foreground truncate">
+                          {[m.designation, m.company].filter(Boolean).join(" · ") || "Mentor"}
+                        </div>
+                        {m.rating > 0 && (
+                          <div className="mt-1 flex items-center gap-1 text-xs text-muted-foreground">
+                            <Star className="size-3 fill-warning text-warning" /> {m.rating.toFixed(1)}
+                            {m.reviewCount > 0 && <span>({m.reviewCount})</span>}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    {(m.skills?.length || m.domains?.length) ? (
+                      <div className="mt-3 flex flex-wrap gap-1">
+                        {[...(m.skills ?? []), ...(m.domains ?? [])].slice(0, 4).map((tag) => (
+                          <span key={tag} className="text-[10px] uppercase rounded-full bg-accent text-primary px-2 py-0.5 font-medium">{tag}</span>
+                        ))}
+                      </div>
+                    ) : null}
+
+                    <div className="mt-4 flex gap-2">
+                      <Button size="sm" variant="outline" className="rounded-full flex-1" onClick={() => startChat.mutate(m.id)}>
+                        Message
+                      </Button>
+                      <Button
+                        size="sm"
+                        className="rounded-full flex-1 bg-gradient-primary text-primary-foreground"
+                        disabled={connect.isPending}
+                        onClick={() => connect.mutate(m.id)}
+                      >
+                        Connect
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </section>
+        </>
+      )}
     </AppShell>
   );
 }
