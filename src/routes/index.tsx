@@ -57,11 +57,11 @@ function Hero() {
           </p>
 
           <div className="mt-8 flex flex-wrap gap-3">
-            <Button size="lg" className="rounded-full h-12 px-6 bg-gradient-primary text-primary-foreground shadow-elegant hover:opacity-95">
-              Join CampusBridge <ArrowRight className="ml-1 size-4" />
+            <Button asChild size="lg" className="rounded-full h-12 px-6 bg-gradient-primary text-primary-foreground shadow-elegant hover:opacity-95">
+              <Link to="/register">Join CampusBridge <ArrowRight className="ml-1 size-4" /></Link>
             </Button>
-            <Button size="lg" variant="outline" className="rounded-full h-12 px-6">
-              Explore More
+            <Button asChild size="lg" variant="outline" className="rounded-full h-12 px-6">
+              <Link to="/mentorship">Explore More</Link>
             </Button>
           </div>
 
@@ -252,8 +252,8 @@ function CtaBanner() {
             Join thousands of MGR students, seniors and alumni building a stronger network — together.
           </p>
           <div className="mt-6 flex flex-wrap gap-3">
-            <Button size="lg" className="rounded-full h-12 px-6 bg-background text-foreground hover:bg-background/90">
-              Create your account
+            <Button asChild size="lg" className="rounded-full h-12 px-6 bg-background text-foreground hover:bg-background/90">
+              <Link to="/register">Create your account</Link>
             </Button>
             <div className="flex items-center gap-2 text-sm text-primary-foreground/85">
               <CheckCircle2 className="size-4" /> Verified institute email required

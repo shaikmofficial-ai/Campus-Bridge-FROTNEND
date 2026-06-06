@@ -5,8 +5,8 @@ const logo = logoAsset;
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Eye, EyeOff, ArrowRight, ShieldCheck, GraduationCap, Users } from "lucide-react";
-import { signIn } from "@/lib/auth";
+import { Eye, EyeOff, ArrowRight, ShieldCheck, GraduationCap, Users, Loader2 } from "lucide-react";
+import { loginUser } from "@/lib/auth";
 
 export const Route = createFileRoute("/login")({
   validateSearch: (s: Record<string, unknown>) => ({
@@ -26,10 +26,11 @@ function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const { redirect } = useSearch({ from: "/login" });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
     if (!email || !password) {
@@ -40,9 +41,16 @@ function LoginPage() {
       setError("Password must be at least 6 characters.");
       return;
     }
-    const user = signIn(email.trim(), password);
-    const target = user.role === "admin" ? "/admin" : (redirect || "/dashboard");
-    navigate({ to: target, replace: true });
+    setLoading(true);
+    try {
+      const user = await loginUser(email.trim(), password);
+      const target = user.role === "admin" ? "/admin" : (redirect || "/dashboard");
+      navigate({ to: target, replace: true });
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Sign in failed. Please try again.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -152,13 +160,22 @@ function LoginPage() {
             <Button
               type="submit"
               size="lg"
+              disabled={loading}
               className="w-full h-11 rounded-full bg-gradient-primary text-primary-foreground shadow-elegant hover:opacity-95 text-sm font-semibold"
             >
-              Sign In <ArrowRight className="ml-1 size-4" />
+              {loading ? (
+                <>
+                  <Loader2 className="mr-1 size-4 animate-spin" /> Signing in…
+                </>
+              ) : (
+                <>
+                  Sign In <ArrowRight className="ml-1 size-4" />
+                </>
+              )}
             </Button>
 
             <p className="text-[11px] text-center text-muted-foreground">
-              Tip: use an email containing <span className="font-semibold text-foreground">admin</span> to access the Admin Dashboard.
+              Use your registered institute email and password.
             </p>
           </form>
 
@@ -177,7 +194,7 @@ function LoginPage() {
           <div className="text-center text-sm text-muted-foreground">
             New to CampusBridge?{" "}
             <Link
-              to="/"
+              to="/register"
               className="text-primary font-semibold hover:text-primary-glow transition-colors"
             >
               Create an account

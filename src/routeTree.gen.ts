@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as ResourcesRouteImport } from './routes/resources'
+import { Route as RegisterRouteImport } from './routes/register'
 import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as PlacementsRouteImport } from './routes/placements'
 import { Route as MentorshipRouteImport } from './routes/mentorship'
@@ -28,6 +29,11 @@ const ResourcesRoute = ResourcesRouteImport.update({
 const ProfileRoute = ProfileRouteImport.update({
   id: '/profile',
   path: '/profile',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RegisterRoute = RegisterRouteImport.update({
+  id: '/register',
+  path: '/register',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PlacementsRoute = PlacementsRouteImport.update({
@@ -81,6 +87,7 @@ export interface FileRoutesByFullPath {
   '/mentorship': typeof MentorshipRoute
   '/placements': typeof PlacementsRoute
   '/profile': typeof ProfileRoute
+  '/register': typeof RegisterRoute
   '/resources': typeof ResourcesRoute
 }
 export interface FileRoutesByTo {
@@ -93,6 +100,7 @@ export interface FileRoutesByTo {
   '/mentorship': typeof MentorshipRoute
   '/placements': typeof PlacementsRoute
   '/profile': typeof ProfileRoute
+  '/register': typeof RegisterRoute
   '/resources': typeof ResourcesRoute
 }
 export interface FileRoutesById {
@@ -106,6 +114,7 @@ export interface FileRoutesById {
   '/mentorship': typeof MentorshipRoute
   '/placements': typeof PlacementsRoute
   '/profile': typeof ProfileRoute
+  '/register': typeof RegisterRoute
   '/resources': typeof ResourcesRoute
 }
 export interface FileRouteTypes {
@@ -120,6 +129,7 @@ export interface FileRouteTypes {
     | '/mentorship'
     | '/placements'
     | '/profile'
+    | '/register'
     | '/resources'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -132,6 +142,7 @@ export interface FileRouteTypes {
     | '/mentorship'
     | '/placements'
     | '/profile'
+    | '/register'
     | '/resources'
   id:
     | '__root__'
@@ -144,6 +155,7 @@ export interface FileRouteTypes {
     | '/mentorship'
     | '/placements'
     | '/profile'
+    | '/register'
     | '/resources'
   fileRoutesById: FileRoutesById
 }
@@ -157,11 +169,19 @@ export interface RootRouteChildren {
   MentorshipRoute: typeof MentorshipRoute
   PlacementsRoute: typeof PlacementsRoute
   ProfileRoute: typeof ProfileRoute
+  RegisterRoute: typeof RegisterRoute
   ResourcesRoute: typeof ResourcesRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/register': {
+      id: '/register'
+      path: '/register'
+      fullPath: '/register'
+      preLoaderRoute: typeof RegisterRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/resources': {
       id: '/resources'
       path: '/resources'
@@ -245,6 +265,7 @@ const rootRouteChildren: RootRouteChildren = {
   MentorshipRoute: MentorshipRoute,
   PlacementsRoute: PlacementsRoute,
   ProfileRoute: ProfileRoute,
+  RegisterRoute: RegisterRoute,
   ResourcesRoute: ResourcesRoute,
 }
 export const routeTree = rootRouteImport

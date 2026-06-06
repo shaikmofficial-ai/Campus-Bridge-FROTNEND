@@ -1,12 +1,16 @@
-import { ReactNode, useEffect, useState } from "react";
+import { ReactNode, useEffect, useRef, useState } from "react";
 import { Link, useLocation, useNavigate } from "@tanstack/react-router";
+import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
 import logoAsset from "@/assets/mgr-logo-official.png";
 const logo = logoAsset;
 import {
   LayoutDashboard, Users, MessagesSquare, BookOpen, Briefcase,
-  Bell, Bookmark, UserCircle2, Settings, LogOut, Search, ShieldCheck, Loader2,
+  Bell, Bookmark, UserCircle2, Settings, LogOut, Search, ShieldCheck, Loader2, Check,
 } from "lucide-react";
 import { getUser, signOut, type AuthUser, type Role } from "@/lib/auth";
+import { notificationApi } from "@/lib/api/campus";
+import { isNotificationRead } from "@/lib/api/normalize";
+import { timeAgo } from "@/lib/ui";
 
 const nav = [
   { to: "/dashboard", icon: LayoutDashboard, label: "Dashboard" },
@@ -120,10 +124,7 @@ export function AppShell({
                 className="bg-transparent text-sm outline-none flex-1 placeholder:text-muted-foreground"
               />
             </div>
-            <button className="relative size-9 grid place-items-center rounded-full hover:bg-muted">
-              <Bell className="size-4" />
-              <span className="absolute top-1.5 right-1.5 size-2 bg-destructive rounded-full" />
-            </button>
+            <NotificationsBell />
             <button className="size-9 grid place-items-center rounded-full hover:bg-muted">
               <Bookmark className="size-4" />
             </button>
@@ -161,6 +162,102 @@ export function AppShell({
           {children}
         </main>
       </div>
+    </div>
+  );
+}
+
+
+function NotificationsBell() {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+  const queryClient = useQueryClient();
+
+  const countQ = useQuery({
+    queryKey: ["notifications", "count"],
+    queryFn: notificationApi.unreadCount,
+    refetchInterval: 30000,
+  });
+  const listQ = useQuery({
+    queryKey: ["notifications", "list"],
+    queryFn: notificationApi.list,
+    enabled: open,
+  });
+
+  const markRead = useMutation({
+    mutationFn: (id: number) => notificationApi.markRead(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["notifications", "list"] });
+      queryClient.invalidateQueries({ queryKey: ["notifications", "count"] });
+    },
+  });
+
+  useEffect(() => {
+    function onClick(e: MouseEvent) {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    }
+    if (open) document.addEventListener("mousedown", onClick);
+    return () => document.removeEventListener("mousedown", onClick);
+  }, [open]);
+
+  const count = countQ.data ?? 0;
+  const items = listQ.data ?? [];
+
+  return (
+    <div className="relative" ref={ref}>
+      <button
+        onClick={() => setOpen((s) => !s)}
+        className="relative size-9 grid place-items-center rounded-full hover:bg-muted"
+        aria-label="Notifications"
+      >
+        <Bell className="size-4" />
+        {count > 0 && (
+          <span className="absolute -top-0.5 -right-0.5 min-w-4 h-4 px-1 grid place-items-center text-[9px] font-bold bg-destructive text-white rounded-full">
+            {count > 9 ? "9+" : count}
+          </span>
+        )}
+      </button>
+
+      {open && (
+        <div className="absolute right-0 mt-2 w-80 max-h-96 overflow-y-auto rounded-2xl border border-border bg-card shadow-elegant z-50">
+          <div className="px-4 py-3 border-b border-border flex items-center justify-between">
+            <div className="text-sm font-semibold">Notifications</div>
+            {count > 0 && <span className="text-[11px] text-muted-foreground">{count} unread</span>}
+          </div>
+          {listQ.isLoading ? (
+            <div className="p-6 text-center text-sm text-muted-foreground flex items-center justify-center gap-2">
+              <Loader2 className="size-4 animate-spin" /> Loading…
+            </div>
+          ) : items.length === 0 ? (
+            <div className="p-6 text-center text-sm text-muted-foreground">You're all caught up.</div>
+          ) : (
+            <ul className="divide-y divide-border">
+              {items.map((n) => {
+                const read = isNotificationRead(n);
+                return (
+                  <li key={n.id} className={`px-4 py-3 flex gap-3 ${read ? "" : "bg-accent/30"}`}>
+                    <div className={`mt-1 size-2 rounded-full shrink-0 ${read ? "bg-transparent" : "bg-primary"}`} />
+                    <div className="flex-1 min-w-0">
+                      <div className="text-sm font-medium">{n.title}</div>
+                      <div className="text-xs text-muted-foreground">{n.message}</div>
+                      {n.createdAt && <div className="text-[10px] text-muted-foreground mt-0.5">{timeAgo(n.createdAt)}</div>}
+                    </div>
+                    {!read && (
+                      <button
+                        onClick={() => markRead.mutate(n.id)}
+                        className="text-muted-foreground hover:text-primary shrink-0"
+                        aria-label="Mark as read"
+                        title="Mark as read"
+                      >
+                        <Check className="size-4" />
+                      </button>
+                    )}
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+        </div>
+      )}
     </div>
   );
 }

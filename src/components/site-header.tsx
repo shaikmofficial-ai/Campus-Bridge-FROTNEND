@@ -99,7 +99,7 @@ export function SiteHeader() {
                 className="rounded-full bg-gradient-primary text-primary-foreground shadow-elegant hover:opacity-95"
                 asChild
               >
-                <Link to="/login">Get Started</Link>
+                <Link to="/register">Get Started</Link>
               </Button>
             </>
           )}
@@ -137,7 +137,7 @@ export function SiteHeader() {
               </Button>
             ) : (
               <Button asChild className="mt-2 rounded-full bg-gradient-primary text-primary-foreground">
-                <Link to="/login" onClick={() => setOpen(false)}>Get Started</Link>
+                <Link to="/register" onClick={() => setOpen(false)}>Get Started</Link>
               </Button>
             )}
           </div>
