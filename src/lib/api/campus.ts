@@ -65,7 +65,20 @@ export const forumApi = {
   publicPosts: () => apiFetch<ForumPost[]>("/api/forum/public"),
   groups: () => apiFetch<ForumGroup[]>("/api/forum/groups"),
   createPost: (payload: ForumPostPayload) =>
-    apiFetch<ForumPost>("/api/forum/posts", { method: "POST", body: payload }),
+    apiFetch<ForumPost>("/api/forum/posts", {
+      method: "POST",
+      // The backend's ForumPostRequest.isPublic is a Lombok boolean, which
+      // Jackson binds from the JSON key "public" (not "isPublic"). Send both
+      // so the post is correctly flagged public regardless.
+      body: {
+        title: payload.title,
+        content: payload.content,
+        category: payload.category,
+        public: payload.isPublic,
+        isPublic: payload.isPublic,
+        groupId: payload.groupId ?? null,
+      },
+    }),
   addComment: (postId: number, content: string) =>
     apiFetch(`/api/forum/posts/${postId}/comments`, { method: "POST", body: { content } }),
   viewPost: (postId: number) => apiFetch<ForumPost>(`/api/forum/posts/${postId}`),
