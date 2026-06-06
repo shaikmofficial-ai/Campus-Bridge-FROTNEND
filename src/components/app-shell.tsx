@@ -1,10 +1,12 @@
-import { ReactNode } from "react";
-import { Link, useLocation } from "@tanstack/react-router";
-import logo from "@/assets/mgr-logo.png";
+import { ReactNode, useEffect, useState } from "react";
+import { Link, useLocation, useNavigate } from "@tanstack/react-router";
+import logoAsset from "@/assets/mgr-logo-official.png";
+const logo = logoAsset;
 import {
   LayoutDashboard, Users, MessagesSquare, BookOpen, Briefcase,
-  Bell, Bookmark, UserCircle2, Settings, LogOut, Search, ShieldCheck,
+  Bell, Bookmark, UserCircle2, Settings, LogOut, Search, ShieldCheck, Loader2,
 } from "lucide-react";
+import { getUser, signOut, type AuthUser, type Role } from "@/lib/auth";
 
 const nav = [
   { to: "/dashboard", icon: LayoutDashboard, label: "Dashboard" },
@@ -17,8 +19,53 @@ const nav = [
   { to: "/admin", icon: ShieldCheck, label: "Admin" },
 ];
 
-export function AppShell({ children, title, subtitle }: { children: ReactNode; title?: string; subtitle?: string }) {
+export function AppShell({
+  children,
+  title,
+  subtitle,
+  requireRole,
+}: {
+  children: ReactNode;
+  title?: string;
+  subtitle?: string;
+  requireRole?: Role;
+}) {
   const { pathname } = useLocation();
+  const navigate = useNavigate();
+  const [user, setUser] = useState<AuthUser | null | "loading">("loading");
+
+  useEffect(() => {
+    const u = getUser();
+    if (!u) {
+      navigate({ to: "/login", search: { redirect: pathname } as never, replace: true });
+      setUser(null);
+      return;
+    }
+    if (requireRole && u.role !== requireRole) {
+      navigate({ to: "/dashboard", replace: true });
+      setUser(null);
+      return;
+    }
+    setUser(u);
+  }, [navigate, pathname, requireRole]);
+
+  function handleLogout() {
+    signOut();
+    navigate({ to: "/login", replace: true });
+  }
+
+  if (user === "loading" || user === null) {
+    return (
+      <div className="min-h-screen grid place-items-center bg-surface text-muted-foreground">
+        <div className="flex items-center gap-2 text-sm">
+          <Loader2 className="size-4 animate-spin" /> Verifying access…
+        </div>
+      </div>
+    );
+  }
+
+  const visibleNav = nav.filter((n) => n.to !== "/admin" || user.role === "admin");
+
   return (
     <div className="min-h-screen bg-surface">
       <div className="mx-auto max-w-[1500px] grid lg:grid-cols-[260px_1fr] gap-6 p-4 lg:p-6">
@@ -31,7 +78,7 @@ export function AppShell({ children, title, subtitle }: { children: ReactNode; t
             </div>
           </Link>
           <nav className="mt-3 flex-1 space-y-1">
-            {nav.map((n) => {
+            {visibleNav.map((n) => {
               const active = pathname.startsWith(n.to);
               return (
                 <Link
@@ -53,7 +100,10 @@ export function AppShell({ children, title, subtitle }: { children: ReactNode; t
               Explore Now
             </button>
           </div>
-          <button className="mt-3 flex items-center gap-2 px-3 py-2 text-sm text-muted-foreground hover:text-foreground">
+          <button
+            onClick={handleLogout}
+            className="mt-3 flex items-center gap-2 px-3 py-2 text-sm text-muted-foreground hover:text-foreground"
+          >
             <LogOut className="size-4" /> Logout
           </button>
         </aside>
@@ -78,11 +128,23 @@ export function AppShell({ children, title, subtitle }: { children: ReactNode; t
               <Bookmark className="size-4" />
             </button>
             <div className="flex items-center gap-2.5 pl-2 ml-1 border-l border-border">
-              <img src="https://i.pravatar.cc/64?img=12" alt="" className="size-9 rounded-full object-cover" />
+              <img
+                src={`https://i.pravatar.cc/64?u=${encodeURIComponent(user.email)}`}
+                alt=""
+                className="size-9 rounded-full object-cover"
+              />
               <div className="hidden sm:block">
-                <div className="text-sm font-semibold leading-tight">Karthik R</div>
-                <div className="text-[11px] text-muted-foreground">Student</div>
+                <div className="text-sm font-semibold leading-tight">{user.name}</div>
+                <div className="text-[11px] text-muted-foreground capitalize">{user.role}</div>
               </div>
+              <button
+                onClick={handleLogout}
+                className="ml-2 size-9 grid place-items-center rounded-full hover:bg-muted text-muted-foreground hover:text-foreground"
+                aria-label="Sign out"
+                title="Sign out"
+              >
+                <LogOut className="size-4" />
+              </button>
             </div>
           </header>
 

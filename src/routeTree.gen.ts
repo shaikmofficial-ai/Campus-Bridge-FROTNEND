@@ -13,6 +13,7 @@ import { Route as ResourcesRouteImport } from './routes/resources'
 import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as PlacementsRouteImport } from './routes/placements'
 import { Route as MentorshipRouteImport } from './routes/mentorship'
+import { Route as LoginRouteImport } from './routes/login'
 import { Route as ForumRouteImport } from './routes/forum'
 import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as ChatRouteImport } from './routes/chat'
@@ -37,6 +38,11 @@ const PlacementsRoute = PlacementsRouteImport.update({
 const MentorshipRoute = MentorshipRouteImport.update({
   id: '/mentorship',
   path: '/mentorship',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LoginRoute = LoginRouteImport.update({
+  id: '/login',
+  path: '/login',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ForumRoute = ForumRouteImport.update({
@@ -71,6 +77,7 @@ export interface FileRoutesByFullPath {
   '/chat': typeof ChatRoute
   '/dashboard': typeof DashboardRoute
   '/forum': typeof ForumRoute
+  '/login': typeof LoginRoute
   '/mentorship': typeof MentorshipRoute
   '/placements': typeof PlacementsRoute
   '/profile': typeof ProfileRoute
@@ -82,6 +89,7 @@ export interface FileRoutesByTo {
   '/chat': typeof ChatRoute
   '/dashboard': typeof DashboardRoute
   '/forum': typeof ForumRoute
+  '/login': typeof LoginRoute
   '/mentorship': typeof MentorshipRoute
   '/placements': typeof PlacementsRoute
   '/profile': typeof ProfileRoute
@@ -94,6 +102,7 @@ export interface FileRoutesById {
   '/chat': typeof ChatRoute
   '/dashboard': typeof DashboardRoute
   '/forum': typeof ForumRoute
+  '/login': typeof LoginRoute
   '/mentorship': typeof MentorshipRoute
   '/placements': typeof PlacementsRoute
   '/profile': typeof ProfileRoute
@@ -107,6 +116,7 @@ export interface FileRouteTypes {
     | '/chat'
     | '/dashboard'
     | '/forum'
+    | '/login'
     | '/mentorship'
     | '/placements'
     | '/profile'
@@ -118,6 +128,7 @@ export interface FileRouteTypes {
     | '/chat'
     | '/dashboard'
     | '/forum'
+    | '/login'
     | '/mentorship'
     | '/placements'
     | '/profile'
@@ -129,6 +140,7 @@ export interface FileRouteTypes {
     | '/chat'
     | '/dashboard'
     | '/forum'
+    | '/login'
     | '/mentorship'
     | '/placements'
     | '/profile'
@@ -141,6 +153,7 @@ export interface RootRouteChildren {
   ChatRoute: typeof ChatRoute
   DashboardRoute: typeof DashboardRoute
   ForumRoute: typeof ForumRoute
+  LoginRoute: typeof LoginRoute
   MentorshipRoute: typeof MentorshipRoute
   PlacementsRoute: typeof PlacementsRoute
   ProfileRoute: typeof ProfileRoute
@@ -175,6 +188,13 @@ declare module '@tanstack/react-router' {
       path: '/mentorship'
       fullPath: '/mentorship'
       preLoaderRoute: typeof MentorshipRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/login': {
+      id: '/login'
+      path: '/login'
+      fullPath: '/login'
+      preLoaderRoute: typeof LoginRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/forum': {
@@ -221,6 +241,7 @@ const rootRouteChildren: RootRouteChildren = {
   ChatRoute: ChatRoute,
   DashboardRoute: DashboardRoute,
   ForumRoute: ForumRoute,
+  LoginRoute: LoginRoute,
   MentorshipRoute: MentorshipRoute,
   PlacementsRoute: PlacementsRoute,
   ProfileRoute: ProfileRoute,
