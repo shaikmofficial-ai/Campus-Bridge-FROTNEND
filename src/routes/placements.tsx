@@ -10,11 +10,11 @@ import { Textarea } from "@/components/ui/textarea";
 import {
   Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle,
 } from "@/components/ui/dialog";
-import { Calendar, Building2, Plus, Loader2, AlertCircle } from "lucide-react";
+import { Calendar, Building2, Plus, Loader2, AlertCircle, Search, ExternalLink, MapPin, RefreshCw, Briefcase } from "lucide-react";
 import { placementApi } from "@/lib/api/campus";
 import { getUser } from "@/lib/auth";
-import { avatarUrl, formatDate } from "@/lib/ui";
-import type { PlacementDrive, PlacementStory } from "@/lib/api/types";
+import { avatarUrl, formatDate, timeAgo } from "@/lib/ui";
+import type { ExternalJob, PlacementDrive, PlacementStory } from "@/lib/api/types";
 
 export const Route = createFileRoute("/placements")({
   head: () => ({ meta: [{ title: "Placement Hub · CampusBridge" }] }),
@@ -78,6 +78,8 @@ function Placements() {
           </div>
         )}
       </section>
+
+      <LiveJobs isAdmin={isAdmin} />
 
       <section className="mt-10">
         <div className="flex items-center justify-between mb-3">
@@ -220,6 +222,106 @@ function NewStoryDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (
         </DialogFooter>
       </DialogContent>
     </Dialog>
+  );
+}
+
+function LiveJobs({ isAdmin }: { isAdmin: boolean }) {
+  const queryClient = useQueryClient();
+  const [query, setQuery] = useState("");
+  const [location, setLocation] = useState("");
+  const [filters, setFilters] = useState<{ query?: string; location?: string }>({});
+
+  const jobsQ = useQuery({
+    queryKey: ["placements", "jobs", filters],
+    queryFn: () => placementApi.jobs(filters),
+  });
+
+  const refresh = useMutation({
+    mutationFn: () => placementApi.refreshJobs(),
+    onSuccess: (d) => {
+      toast.success(`Refreshed ${d.refreshed} jobs from the provider`);
+      queryClient.invalidateQueries({ queryKey: ["placements", "jobs"] });
+    },
+    onError: (e) => toast.error(e instanceof Error ? e.message : "Refresh failed"),
+  });
+
+  const jobs = jobsQ.data ?? [];
+
+  const formatSalary = (min?: number, max?: number) => {
+    const fmt = (n: number) => `₹${Math.round(n).toLocaleString("en-IN")}`;
+    if (min && max) return `${fmt(min)} – ${fmt(max)}`;
+    if (min) return `From ${fmt(min)}`;
+    if (max) return `Up to ${fmt(max)}`;
+    return null;
+  };
+
+  return (
+    <section className="mt-10">
+      <div className="flex items-center justify-between mb-3">
+        <div>
+          <h2 className="text-lg font-semibold flex items-center gap-2">
+            <Briefcase className="size-5 text-primary" /> Live Job Openings
+          </h2>
+          <p className="text-xs text-muted-foreground">Auto-updated from Adzuna. Apply directly on the company site.</p>
+        </div>
+        {isAdmin && (
+          <Button onClick={() => refresh.mutate()} size="sm" variant="outline" className="rounded-full" disabled={refresh.isPending}>
+            <RefreshCw className={`size-4 ${refresh.isPending ? "animate-spin" : ""}`} /> Refresh
+          </Button>
+        )}
+      </div>
+
+      <form
+        onSubmit={(e) => { e.preventDefault(); setFilters({ query: query.trim() || undefined, location: location.trim() || undefined }); }}
+        className="rounded-2xl border border-border bg-card p-3 flex flex-col sm:flex-row items-stretch gap-2 mb-4"
+      >
+        <div className="flex items-center gap-2 flex-1 rounded-full bg-muted px-3">
+          <Search className="size-4 text-muted-foreground" />
+          <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Role or company (e.g. Java developer)" className="flex-1 bg-transparent text-sm outline-none py-2" />
+        </div>
+        <div className="flex items-center gap-2 flex-1 rounded-full bg-muted px-3">
+          <MapPin className="size-4 text-muted-foreground" />
+          <input value={location} onChange={(e) => setLocation(e.target.value)} placeholder="Location (e.g. Chennai)" className="flex-1 bg-transparent text-sm outline-none py-2" />
+        </div>
+        <Button type="submit" className="rounded-full bg-gradient-primary text-primary-foreground">Search</Button>
+      </form>
+
+      {jobsQ.isLoading ? (
+        <Loading />
+      ) : jobsQ.isError ? (
+        <ErrorBox msg={jobsQ.error instanceof Error ? jobsQ.error.message : "Failed to load jobs."} />
+      ) : jobs.length === 0 ? (
+        <Empty text="No live jobs yet. An admin can hit Refresh once the Adzuna API key is configured." />
+      ) : (
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {jobs.map((j: ExternalJob) => {
+            const salary = formatSalary(j.salaryMin, j.salaryMax);
+            return (
+              <div key={j.id} className="rounded-2xl border border-border bg-card p-5 flex flex-col">
+                <div className="flex items-start justify-between gap-2">
+                  <div className="size-10 grid place-items-center rounded-xl bg-accent text-primary shrink-0"><Building2 className="size-5" /></div>
+                  {j.source && <span className="text-[10px] uppercase tracking-wider text-muted-foreground">{j.source}</span>}
+                </div>
+                <div className="mt-3 font-semibold leading-snug line-clamp-2">{j.title}</div>
+                <div className="text-xs text-muted-foreground mt-1">{j.company || "Company undisclosed"}</div>
+                <div className="text-xs text-muted-foreground flex items-center gap-1 mt-1">
+                  <MapPin className="size-3" /> {j.location || "Location flexible"}
+                </div>
+                {salary && <div className="text-xs font-medium text-success mt-1">{salary}</div>}
+                <div className="mt-auto pt-4 flex items-center justify-between">
+                  <span className="text-[11px] text-muted-foreground">{j.postedAt ? timeAgo(j.postedAt) : ""}</span>
+                  {j.redirectUrl && (
+                    <Button asChild size="sm" className="rounded-full bg-gradient-primary text-primary-foreground">
+                      <a href={j.redirectUrl} target="_blank" rel="noreferrer">Apply <ExternalLink className="size-3.5" /></a>
+                    </Button>
+                  )}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </section>
   );
 }
 

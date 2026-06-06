@@ -76,6 +76,21 @@ export interface PlacementStory {
   createdAt?: string;
 }
 
+export interface ExternalJob {
+  id: number;
+  title: string;
+  company?: string;
+  location?: string;
+  category?: string;
+  salaryMin?: number;
+  salaryMax?: number;
+  contractTime?: string;
+  redirectUrl?: string;
+  description?: string;
+  source?: string;
+  postedAt?: string;
+}
+
 export interface DashboardResponse {
   userId: number;
   userName: string;

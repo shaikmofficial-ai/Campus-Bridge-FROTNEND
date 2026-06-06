@@ -7,6 +7,7 @@ import type {
   AuthResponse,
   Conversation,
   DashboardResponse,
+  ExternalJob,
   ForumGroup,
   ForumPost,
   ForumPostPayload,
@@ -111,6 +112,9 @@ export const placementApi = {
   stories: () => apiFetch<PlacementStory[]>("/api/placements/stories"),
   createStory: (payload: { companyName: string; role: string; packageAmount?: string; story: string }) =>
     apiFetch<PlacementStory>("/api/placements/stories", { method: "POST", body: payload }),
+  jobs: (params?: { query?: string; location?: string }) =>
+    apiFetch<ExternalJob[]>("/api/placements/jobs", { query: params }),
+  refreshJobs: () => apiFetch<{ refreshed: number }>("/api/placements/jobs/refresh", { method: "POST" }),
 };
 
 // ---------------- Messages ----------------
