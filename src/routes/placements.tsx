@@ -10,11 +10,11 @@ import { Textarea } from "@/components/ui/textarea";
 import {
   Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle,
 } from "@/components/ui/dialog";
-import { Calendar, Building2, Plus, Loader2, AlertCircle, Search, ExternalLink, MapPin, RefreshCw, Briefcase } from "lucide-react";
-import { placementApi } from "@/lib/api/campus";
+import { Calendar, Building2, Plus, Loader2, AlertCircle, Search, ExternalLink, MapPin, RefreshCw, Briefcase, GraduationCap } from "lucide-react";
+import { mentorJobApi, placementApi } from "@/lib/api/campus";
 import { getUser } from "@/lib/auth";
 import { avatarUrl, formatDate, timeAgo } from "@/lib/ui";
-import type { ExternalJob, PlacementDrive, PlacementStory } from "@/lib/api/types";
+import type { ExternalJob, MentorJob, PlacementDrive, PlacementStory } from "@/lib/api/types";
 
 export const Route = createFileRoute("/placements")({
   head: () => ({ meta: [{ title: "Placement Hub · CampusBridge" }] }),
@@ -23,6 +23,7 @@ export const Route = createFileRoute("/placements")({
 
 function Placements() {
   const isAdmin = getUser()?.role === "admin";
+  const isMentor = getUser()?.role === "mentor";
   const [driveOpen, setDriveOpen] = useState(false);
   const [storyOpen, setStoryOpen] = useState(false);
 
@@ -80,6 +81,8 @@ function Placements() {
       </section>
 
       <LiveJobs isAdmin={isAdmin} />
+
+      <MentorJobBoard isMentor={isMentor || isAdmin} />
 
       <section className="mt-10">
         <div className="flex items-center justify-between mb-3">
@@ -322,6 +325,128 @@ function LiveJobs({ isAdmin }: { isAdmin: boolean }) {
         </div>
       )}
     </section>
+  );
+}
+
+function MentorJobBoard({ isMentor }: { isMentor: boolean }) {
+  const queryClient = useQueryClient();
+  const [open, setOpen] = useState(false);
+
+  const jobsQ = useQuery({ queryKey: ["mentor-jobs"], queryFn: mentorJobApi.list });
+  const jobs = jobsQ.data ?? [];
+
+  return (
+    <section className="mt-10">
+      <div className="flex items-center justify-between mb-3">
+        <div>
+          <h2 className="text-lg font-semibold flex items-center gap-2">
+            <GraduationCap className="size-5 text-primary" /> Mentor Job Board
+          </h2>
+          <p className="text-xs text-muted-foreground">Openings shared directly by alumni mentors.</p>
+        </div>
+        {isMentor && (
+          <Button onClick={() => setOpen(true)} size="sm" className="rounded-full bg-gradient-primary text-primary-foreground">
+            <Plus className="size-4" /> Post a Job
+          </Button>
+        )}
+      </div>
+
+      {jobsQ.isLoading ? (
+        <Loading />
+      ) : jobsQ.isError ? (
+        <ErrorBox msg={jobsQ.error instanceof Error ? jobsQ.error.message : "Failed to load mentor jobs."} />
+      ) : jobs.length === 0 ? (
+        <Empty text={isMentor ? "No postings yet. Be the first mentor to share an opening!" : "No mentor postings yet. Check back soon."} />
+      ) : (
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {jobs.map((j: MentorJob) => (
+            <div key={j.id} className="rounded-2xl border border-border bg-card p-5 flex flex-col">
+              <div className="flex items-start justify-between gap-2">
+                <div className="size-10 grid place-items-center rounded-xl bg-accent text-primary shrink-0"><Briefcase className="size-5" /></div>
+                {j.jobType && <span className="text-[10px] uppercase tracking-wider rounded-full bg-accent text-primary px-2 py-0.5">{j.jobType.replace("_", " ")}</span>}
+              </div>
+              <div className="mt-3 font-semibold leading-snug">{j.title}</div>
+              <div className="text-xs text-muted-foreground mt-1">{[j.company, j.location].filter(Boolean).join(" · ")}</div>
+              {j.description && <p className="text-xs text-muted-foreground mt-2 line-clamp-3">{j.description}</p>}
+              {j.skills && j.skills.length > 0 && (
+                <div className="mt-2 flex flex-wrap gap-1">
+                  {j.skills.slice(0, 4).map((s) => (
+                    <span key={s} className="text-[10px] uppercase rounded-full bg-muted text-foreground px-2 py-0.5">{s}</span>
+                  ))}
+                </div>
+              )}
+              <div className="mt-auto pt-4 flex items-center justify-between">
+                <span className="text-[11px] text-muted-foreground">by {j.mentorName ?? "Mentor"}{j.createdAt ? ` · ${timeAgo(j.createdAt)}` : ""}</span>
+                {j.applyLink && (
+                  <Button asChild size="sm" className="rounded-full bg-gradient-primary text-primary-foreground">
+                    <a href={j.applyLink} target="_blank" rel="noreferrer">Apply <ExternalLink className="size-3.5" /></a>
+                  </Button>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      <NewMentorJobDialog open={open} onOpenChange={setOpen} onCreated={() => queryClient.invalidateQueries({ queryKey: ["mentor-jobs"] })} />
+    </section>
+  );
+}
+
+function NewMentorJobDialog({ open, onOpenChange, onCreated }: { open: boolean; onOpenChange: (v: boolean) => void; onCreated: () => void }) {
+  const [f, setF] = useState({ title: "", company: "", location: "", jobType: "FULL_TIME", description: "", applyLink: "", skills: "" });
+  const set = (k: keyof typeof f, v: string) => setF((p) => ({ ...p, [k]: v }));
+
+  const mutation = useMutation({
+    mutationFn: () =>
+      mentorJobApi.create({
+        title: f.title.trim(),
+        company: f.company.trim() || undefined,
+        location: f.location.trim() || undefined,
+        jobType: f.jobType,
+        description: f.description.trim() || undefined,
+        applyLink: f.applyLink.trim() || undefined,
+        skills: f.skills.split(",").map((s) => s.trim()).filter(Boolean),
+      }),
+    onSuccess: () => {
+      toast.success("Job posted");
+      onCreated();
+      onOpenChange(false);
+      setF({ title: "", company: "", location: "", jobType: "FULL_TIME", description: "", applyLink: "", skills: "" });
+    },
+    onError: (e) => toast.error(e instanceof Error ? e.message : "Could not post job"),
+  });
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-lg">
+        <DialogHeader>
+          <DialogTitle>Post a Job Opening</DialogTitle>
+          <DialogDescription>Share an opportunity with students from your network.</DialogDescription>
+        </DialogHeader>
+        <div className="space-y-3 max-h-[60vh] overflow-y-auto pr-1">
+          <Field label="Title"><Input value={f.title} onChange={(e) => set("title", e.target.value)} placeholder="Software Engineer Intern" /></Field>
+          <div className="grid grid-cols-2 gap-3">
+            <Field label="Company"><Input value={f.company} onChange={(e) => set("company", e.target.value)} placeholder="Zoho" /></Field>
+            <Field label="Location"><Input value={f.location} onChange={(e) => set("location", e.target.value)} placeholder="Chennai / Remote" /></Field>
+          </div>
+          <Field label="Type">
+            <select value={f.jobType} onChange={(e) => set("jobType", e.target.value)} className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring">
+              {["FULL_TIME", "INTERNSHIP", "PART_TIME", "CONTRACT"].map((t) => <option key={t} value={t}>{t.replace("_", " ")}</option>)}
+            </select>
+          </Field>
+          <Field label="Description"><Textarea value={f.description} onChange={(e) => set("description", e.target.value)} rows={3} placeholder="Role, responsibilities, eligibility…" /></Field>
+          <Field label="Apply Link"><Input value={f.applyLink} onChange={(e) => set("applyLink", e.target.value)} placeholder="https://…" /></Field>
+          <Field label="Skills (comma separated)"><Input value={f.skills} onChange={(e) => set("skills", e.target.value)} placeholder="Java, Spring, React" /></Field>
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
+          <Button onClick={() => mutation.mutate()} disabled={mutation.isPending || !f.title.trim()} className="bg-gradient-primary text-primary-foreground">
+            {mutation.isPending ? <><Loader2 className="mr-1 size-4 animate-spin" /> Posting…</> : "Post Job"}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }
 

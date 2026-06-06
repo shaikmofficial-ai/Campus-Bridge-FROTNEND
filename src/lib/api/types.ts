@@ -13,6 +13,7 @@ export interface AuthResponse {
   name: string;
   email: string;
   role: BackendRole;
+  registerNumber?: string;
 }
 
 export interface RegisterPayload {
@@ -20,6 +21,7 @@ export interface RegisterPayload {
   email: string;
   password: string;
   role: BackendRole;
+  registerNumber?: string;
   department?: string;
   batch?: string;
 }
@@ -29,6 +31,7 @@ export interface ProfileResponse {
   name: string;
   email: string;
   role: BackendRole;
+  registerNumber?: string;
   department?: string;
   batch?: string;
   bio?: string;
@@ -89,6 +92,31 @@ export interface ExternalJob {
   description?: string;
   source?: string;
   postedAt?: string;
+}
+
+export interface MentorJob {
+  id: number;
+  title: string;
+  company?: string;
+  location?: string;
+  jobType?: string;
+  description?: string;
+  applyLink?: string;
+  skills?: string[];
+  mentorId?: number;
+  mentorName?: string;
+  mentorDesignation?: string;
+  createdAt?: string;
+}
+
+export interface MentorJobPayload {
+  title: string;
+  company?: string;
+  location?: string;
+  jobType?: string;
+  description?: string;
+  applyLink?: string;
+  skills?: string[];
 }
 
 export interface DashboardResponse {

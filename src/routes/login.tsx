@@ -23,7 +23,7 @@ export const Route = createFileRoute("/login")({
 
 function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
-  const [email, setEmail] = useState("");
+  const [identifier, setIdentifier] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -33,8 +33,8 @@ function LoginPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
-    if (!email || !password) {
-      setError("Please enter your email and password.");
+    if (!identifier || !password) {
+      setError("Please enter your email/register number and password.");
       return;
     }
     if (password.length < 6) {
@@ -43,7 +43,7 @@ function LoginPage() {
     }
     setLoading(true);
     try {
-      const user = await loginUser(email.trim(), password);
+      const user = await loginUser(identifier.trim(), password);
       const target = user.role === "admin" ? "/admin" : (redirect || "/dashboard");
       navigate({ to: target, replace: true });
     } catch (err) {
@@ -88,17 +88,17 @@ function LoginPage() {
         {/* Login Card */}
         <div className="rounded-3xl border border-border bg-card shadow-elegant p-6 sm:p-8">
           <form onSubmit={handleSubmit} className="space-y-5">
-            {/* Email */}
+            {/* Email or Register Number */}
             <div className="space-y-2">
-              <Label htmlFor="email" className="text-sm font-medium">
-                Institute Email
+              <Label htmlFor="identifier" className="text-sm font-medium">
+                Email or Register Number
               </Label>
               <Input
-                id="email"
-                type="email"
-                placeholder="name@mgr.edu.in"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                id="identifier"
+                type="text"
+                placeholder="name@mgr.edu.in  or  21CSE1234"
+                value={identifier}
+                onChange={(e) => setIdentifier(e.target.value)}
                 className="h-11 rounded-xl border-input bg-muted/40 px-4 text-sm focus-visible:ring-2 focus-visible:ring-ring"
                 required
               />
@@ -175,7 +175,7 @@ function LoginPage() {
             </Button>
 
             <p className="text-[11px] text-center text-muted-foreground">
-              Use your registered institute email and password.
+              Sign in with your registered email or register number.
             </p>
           </form>
 

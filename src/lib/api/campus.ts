@@ -15,6 +15,8 @@ import type {
   ForumPostPayload,
   Message,
   MentorConnection,
+  MentorJob,
+  MentorJobPayload,
   MentorResponse,
   NotificationItem,
   PlacementDrive,
@@ -31,8 +33,12 @@ import type {
 export const authApi = {
   register: (payload: RegisterPayload) =>
     apiFetch<AuthResponse>("/api/auth/register", { method: "POST", body: payload }),
-  login: (email: string, password: string) =>
-    apiFetch<AuthResponse>("/api/auth/login", { method: "POST", body: { email, password } }),
+  // identifier = email OR register number. Send both keys for backend compatibility.
+  login: (identifier: string, password: string) =>
+    apiFetch<AuthResponse>("/api/auth/login", {
+      method: "POST",
+      body: { email: identifier, identifier, password },
+    }),
 };
 
 // ---------------- Dashboard ----------------
@@ -145,6 +151,14 @@ export const notificationApi = {
   list: () => apiFetch<NotificationItem[]>("/api/notifications"),
   markRead: (id: number) => apiFetch(`/api/notifications/${id}/read`, { method: "POST" }),
   unreadCount: () => apiFetch<number>("/api/notifications/unread-count"),
+};
+
+// ---------------- Mentor Job Board ----------------
+export const mentorJobApi = {
+  list: () => apiFetch<MentorJob[]>("/api/mentor-jobs"),
+  create: (payload: MentorJobPayload) =>
+    apiFetch<MentorJob>("/api/mentor-jobs", { method: "POST", body: payload }),
+  remove: (id: number) => apiFetch(`/api/mentor-jobs/${id}`, { method: "DELETE" }),
 };
 
 // ---------------- Reports ----------------

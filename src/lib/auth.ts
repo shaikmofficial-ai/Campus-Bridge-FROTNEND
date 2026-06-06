@@ -39,9 +39,9 @@ export function isAuthenticated(): boolean {
   return getUser() !== null;
 }
 
-/** Sign in against the backend, persist token + user, return the user. */
-export async function loginUser(email: string, password: string): Promise<AuthUser> {
-  const res = await authApi.login(email.trim(), password);
+/** Sign in with email OR register number, persist token + user, return the user. */
+export async function loginUser(identifier: string, password: string): Promise<AuthUser> {
+  const res = await authApi.login(identifier.trim(), password);
   setToken(res.token);
   const user: AuthUser = { name: res.name, email: res.email, role: toRole(res.role) };
   storeUser(user);

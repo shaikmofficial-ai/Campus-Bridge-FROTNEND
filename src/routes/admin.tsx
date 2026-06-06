@@ -87,7 +87,7 @@ function Admin() {
                   <div className="flex-1 min-w-0">
                     <div className="font-medium text-sm truncate">{u.name}</div>
                     <div className="text-xs text-muted-foreground truncate">
-                      {titleCase(u.role)}{u.department ? ` · ${u.department}` : ""}{u.batch ? ` · ${u.batch}` : ""}
+                      {titleCase(u.role)}{u.registerNumber ? ` · ${u.registerNumber}` : ""}{u.department ? ` · ${u.department}` : ""}{u.batch ? ` · ${u.batch}` : ""}
                     </div>
                   </div>
                   <Button size="sm" variant="outline" className="rounded-full" disabled={decide.isPending}

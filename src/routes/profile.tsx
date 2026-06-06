@@ -56,6 +56,7 @@ function Profile() {
                 <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground">
                   <span className="flex items-center gap-1"><GraduationCap className="size-3.5" /> Dr. M.G.R. University</span>
                   <span className="flex items-center gap-1"><Mail className="size-3.5" /> {p.email}</span>
+                  {p.registerNumber && <span className="rounded-full bg-muted px-2 py-0.5">Reg. No: {p.registerNumber}</span>}
                   <span className="rounded-full bg-accent text-primary px-2 py-0.5 text-[10px] uppercase tracking-wider">{titleCase(p.accountStatus)}</span>
                 </div>
               </div>

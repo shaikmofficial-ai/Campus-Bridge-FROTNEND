@@ -36,6 +36,7 @@ function RegisterPage() {
     email: "",
     password: "",
     role: "STUDENT" as BackendRole,
+    registerNumber: "",
     department: "",
     batch: "",
   });
@@ -61,6 +62,7 @@ function RegisterPage() {
         email: form.email.trim(),
         password: form.password,
         role: form.role,
+        registerNumber: form.registerNumber.trim() || undefined,
         department: form.department.trim() || undefined,
         batch: form.batch.trim() || undefined,
       });
@@ -162,6 +164,17 @@ function RegisterPage() {
                   <option key={r.value} value={r.value}>{r.label}</option>
                 ))}
               </select>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="registerNumber" className="text-sm font-medium">Register Number</Label>
+              <Input
+                id="registerNumber"
+                placeholder="21CSE1234"
+                value={form.registerNumber}
+                onChange={(e) => set("registerNumber", e.target.value)}
+                className="h-11 rounded-xl bg-muted/40"
+              />
             </div>
 
             <div className="grid grid-cols-2 gap-3">
