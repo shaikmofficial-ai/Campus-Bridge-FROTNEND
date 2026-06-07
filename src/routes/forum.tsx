@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/dialog";
 import { Globe, Lock, MessageCircle, Eye, Plus, Loader2, AlertCircle, ArrowLeft, Users } from "lucide-react";
 import { forumApi, profileApi } from "@/lib/api/campus";
+import { ReportButton } from "@/components/report-button";
 import { avatarUrl, timeAgo } from "@/lib/ui";
 import type { ForumComment, ForumGroup, ForumPost } from "@/lib/api/types";
 
@@ -161,9 +162,12 @@ function Forum() {
 
 function PostRow({ post: p, onClick }: { post: ForumPost; onClick: () => void }) {
   return (
-    <button
+    <div
+      role="button"
+      tabIndex={0}
       onClick={onClick}
-      className="w-full text-left rounded-2xl border border-border bg-card p-5 flex items-center gap-4 hover:shadow-soft transition-shadow"
+      onKeyDown={(e) => { if (e.key === "Enter") onClick(); }}
+      className="w-full text-left rounded-2xl border border-border bg-card p-5 flex items-center gap-4 hover:shadow-soft transition-shadow cursor-pointer"
     >
       <img src={avatarUrl(p.author?.profilePictureUrl, p.author?.id ?? p.id)} alt="" className="size-11 rounded-full object-cover" />
       <div className="flex-1 min-w-0">
@@ -178,8 +182,11 @@ function PostRow({ post: p, onClick }: { post: ForumPost; onClick: () => void })
       <div className="flex items-center gap-4 text-xs text-muted-foreground tabular-nums">
         <span className="flex items-center gap-1"><MessageCircle className="size-3.5" /> {p.commentCount}</span>
         <span className="flex items-center gap-1"><Eye className="size-3.5" /> {p.views}</span>
+        <span onClick={(e) => e.stopPropagation()}>
+          <ReportButton targetType="FORUM_POST" targetId={p.id} />
+        </span>
       </div>
-    </button>
+    </div>
   );
 }
 

@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import { resourceApi } from "@/lib/api/campus";
 import { apiDownload } from "@/lib/api/client";
+import { ReportButton } from "@/components/report-button";
 import { titleCase } from "@/lib/ui";
 import type { ResourceItem } from "@/lib/api/types";
 
@@ -122,7 +123,10 @@ function Resources() {
                 <div className="text-xs text-muted-foreground mt-1">
                   {[r.department, r.fileSize, `${r.downloadCount} downloads`].filter(Boolean).join(" · ")}
                 </div>
-                <div className="text-[11px] text-muted-foreground mt-1">by {r.uploaderName ?? "Unknown"}</div>
+                <div className="mt-1 flex items-center justify-between">
+                  <div className="text-[11px] text-muted-foreground">by {r.uploaderName ?? "Unknown"}</div>
+                  <ReportButton targetType="RESOURCE" targetId={r.id} />
+                </div>
                 <div className="mt-4 flex gap-2">
                   <Button size="sm" variant="outline" className="rounded-full flex-1" onClick={() => download(r)}>
                     <Download className="size-3.5" /> Download

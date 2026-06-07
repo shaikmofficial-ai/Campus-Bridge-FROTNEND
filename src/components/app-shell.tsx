@@ -10,7 +10,7 @@ import {
 import { getUser, signOut, type AuthUser, type Role } from "@/lib/auth";
 import { notificationApi } from "@/lib/api/campus";
 import { isNotificationRead } from "@/lib/api/normalize";
-import { timeAgo } from "@/lib/ui";
+import { avatarUrl, timeAgo } from "@/lib/ui";
 
 const nav = [
   { to: "/dashboard", icon: LayoutDashboard, label: "Dashboard" },
@@ -52,6 +52,17 @@ export function AppShell({
     }
     setUser(u);
   }, [navigate, pathname, requireRole]);
+
+  // Keep the header (incl. avatar) in sync when the cached user changes,
+  // e.g. after a profile-picture upload fires "campusbridge:auth".
+  useEffect(() => {
+    const onAuthChange = () => {
+      const u = getUser();
+      if (u) setUser(u);
+    };
+    window.addEventListener("campusbridge:auth", onAuthChange);
+    return () => window.removeEventListener("campusbridge:auth", onAuthChange);
+  }, []);
 
   function handleLogout() {
     signOut();
@@ -130,7 +141,7 @@ export function AppShell({
             </button>
             <div className="flex items-center gap-2.5 pl-2 ml-1 border-l border-border">
               <img
-                src={`https://i.pravatar.cc/64?u=${encodeURIComponent(user.email)}`}
+                src={avatarUrl(user.picture, user.email)}
                 alt=""
                 className="size-9 rounded-full object-cover"
               />

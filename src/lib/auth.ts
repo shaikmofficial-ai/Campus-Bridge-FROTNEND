@@ -16,6 +16,7 @@ export type AuthUser = {
   email: string;
   name: string;
   role: Role;
+  picture?: string;
 };
 
 const KEY = "campusbridge.auth";
@@ -33,6 +34,13 @@ export function getUser(): AuthUser | null {
 function storeUser(user: AuthUser) {
   localStorage.setItem(KEY, JSON.stringify(user));
   window.dispatchEvent(new Event("campusbridge:auth"));
+}
+
+/** Merge fields into the cached user and notify listeners (e.g. navbar avatar). */
+export function updateCachedUser(patch: Partial<AuthUser>) {
+  const current = getUser();
+  if (!current) return;
+  storeUser({ ...current, ...patch });
 }
 
 export function isAuthenticated(): boolean {
@@ -59,11 +67,11 @@ export async function registerUser(payload: RegisterPayload): Promise<AuthUser> 
   return getUser() ?? user;
 }
 
-/** Best-effort fetch of the numeric user id (needed for chat ownership checks). */
+/** Best-effort fetch of the numeric user id + avatar (for chat & navbar). */
 async function hydrateUserId(user: AuthUser) {
   try {
     const profile = await profileApi.me();
-    storeUser({ ...user, id: profile.id });
+    storeUser({ ...user, id: profile.id, picture: profile.profilePictureUrl ?? undefined });
   } catch {
     // Non-fatal: keep the user signed in even if the profile call fails.
   }

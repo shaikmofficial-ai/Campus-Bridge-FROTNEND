@@ -314,6 +314,9 @@ export interface ReportItem {
   reporterName: string;
   reportedUserId?: number;
   reportedUserName?: string;
+  targetType?: "USER" | "FORUM_POST" | "RESOURCE";
+  targetId?: number;
+  targetTitle?: string;
   reason: string;
   description?: string;
   status: "OPEN" | "RESOLVED" | string;
@@ -321,7 +324,9 @@ export interface ReportItem {
 }
 
 export interface ReportPayload {
-  reportedUserId: number;
+  reportedUserId?: number;
+  targetType?: "USER" | "FORUM_POST" | "RESOURCE";
+  targetId?: number;
   reason: string;
   description?: string;
 }

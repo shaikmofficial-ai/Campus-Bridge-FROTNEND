@@ -193,4 +193,7 @@ export const adminApi = {
   approve: (id: number) => apiFetch<ProfileResponse>(`/api/admin/approve/${id}`, { method: "POST" }),
   reject: (id: number) => apiFetch<ProfileResponse>(`/api/admin/reject/${id}`, { method: "POST" }),
   reports: () => apiFetch<ReportItem[]>("/api/admin/reports"),
+  resolveReport: (id: number) => apiFetch<ReportItem>(`/api/admin/reports/${id}/resolve`, { method: "POST" }),
+  deleteForumPost: (id: number) => apiFetch(`/api/admin/forum/posts/${id}`, { method: "DELETE" }),
+  deleteResource: (id: number) => apiFetch(`/api/admin/resources/${id}`, { method: "DELETE" }),
 };

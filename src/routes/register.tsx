@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Eye, EyeOff, ArrowRight, Loader2 } from "lucide-react";
 import { registerUser } from "@/lib/auth";
+import { mentorApi } from "@/lib/api/campus";
 import type { BackendRole } from "@/lib/api/types";
 
 export const Route = createFileRoute("/register")({
@@ -19,11 +20,10 @@ export const Route = createFileRoute("/register")({
   component: RegisterPage,
 });
 
-const ROLES: { value: BackendRole; label: string }[] = [
-  { value: "STUDENT", label: "Student" },
-  { value: "ALUMNI", label: "Alumni" },
-  { value: "MENTOR", label: "Mentor" },
-  { value: "ADMIN", label: "Admin" },
+const ROLES: { value: BackendRole; label: string; hint: string }[] = [
+  { value: "STUDENT", label: "Student", hint: "Looking for mentorship, resources and placements" },
+  { value: "MENTOR", label: "Mentor", hint: "Guide students toward placements" },
+  { value: "ALUMNI", label: "Alumni / Mentor", hint: "Share your industry experience and guide students" },
 ];
 
 function RegisterPage() {
@@ -39,7 +39,11 @@ function RegisterPage() {
     registerNumber: "",
     department: "",
     batch: "",
+    currentRole: "",
+    currentCompany: "",
   });
+
+  const isMentorRole = form.role === "MENTOR" || form.role === "ALUMNI";
 
   const set = (key: keyof typeof form, value: string) =>
     setForm((f) => ({ ...f, [key]: value }) as typeof form);
@@ -66,6 +70,18 @@ function RegisterPage() {
         department: form.department.trim() || undefined,
         batch: form.batch.trim() || undefined,
       });
+      // For mentors/alumni, save their current role/company to the mentor profile.
+      if ((form.role === "MENTOR" || form.role === "ALUMNI")
+          && (form.currentRole.trim() || form.currentCompany.trim())) {
+        try {
+          await mentorApi.updateMyProfile({
+            currentRole: form.currentRole.trim() || undefined,
+            currentCompany: form.currentCompany.trim() || undefined,
+          });
+        } catch {
+          // Non-fatal: they can fill this in later from their profile.
+        }
+      }
       navigate({ to: user.role === "admin" ? "/admin" : "/dashboard", replace: true });
     } catch (err) {
       setError(err instanceof Error ? err.message : "Registration failed. Please try again.");
@@ -164,7 +180,43 @@ function RegisterPage() {
                   <option key={r.value} value={r.value}>{r.label}</option>
                 ))}
               </select>
+              <p className="text-[11px] text-muted-foreground">
+                {ROLES.find((r) => r.value === form.role)?.hint}
+              </p>
             </div>
+
+            {isMentorRole && (
+              <div className="rounded-xl border border-border bg-muted/30 p-3 space-y-3">
+                <div className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                  Showcase your experience
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-1.5">
+                    <Label htmlFor="currentRole" className="text-sm font-medium">Current Role</Label>
+                    <Input
+                      id="currentRole"
+                      placeholder="Software Engineer"
+                      value={form.currentRole}
+                      onChange={(e) => set("currentRole", e.target.value)}
+                      className="h-11 rounded-xl bg-background"
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label htmlFor="currentCompany" className="text-sm font-medium">Current Company</Label>
+                    <Input
+                      id="currentCompany"
+                      placeholder="Google"
+                      value={form.currentCompany}
+                      onChange={(e) => set("currentCompany", e.target.value)}
+                      className="h-11 rounded-xl bg-background"
+                    />
+                  </div>
+                </div>
+                <p className="text-[11px] text-muted-foreground">
+                  Shown to students as "Software Engineer at Google" so they can choose you.
+                </p>
+              </div>
+            )}
 
             <div className="space-y-2">
               <Label htmlFor="registerNumber" className="text-sm font-medium">Register Number</Label>

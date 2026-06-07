@@ -5,7 +5,7 @@ import { AppShell } from "@/components/app-shell";
 import { Button } from "@/components/ui/button";
 import {
   Users, ShieldCheck, Flag, GraduationCap, CheckCircle2, XCircle, Loader2, AlertCircle,
-  BookOpen, MessagesSquare, Briefcase,
+  BookOpen, MessagesSquare, Briefcase, Trash2,
 } from "lucide-react";
 import { adminApi } from "@/lib/api/campus";
 import { avatarUrl, timeAgo, titleCase } from "@/lib/ui";
@@ -31,6 +31,29 @@ function Admin() {
       queryClient.invalidateQueries({ queryKey: ["admin", "stats"] });
     },
     onError: (e) => toast.error(e instanceof Error ? e.message : "Action failed"),
+  });
+
+  const resolveReport = useMutation({
+    mutationFn: (id: number) => adminApi.resolveReport(id),
+    onSuccess: () => {
+      toast.success("Report dismissed");
+      queryClient.invalidateQueries({ queryKey: ["admin", "reports"] });
+      queryClient.invalidateQueries({ queryKey: ["admin", "stats"] });
+    },
+    onError: (e) => toast.error(e instanceof Error ? e.message : "Action failed"),
+  });
+
+  const deleteContent = useMutation({
+    mutationFn: (r: ReportItem) =>
+      r.targetType === "RESOURCE"
+        ? adminApi.deleteResource(r.targetId!)
+        : adminApi.deleteForumPost(r.targetId!),
+    onSuccess: () => {
+      toast.success("Content deleted");
+      queryClient.invalidateQueries({ queryKey: ["admin", "reports"] });
+      queryClient.invalidateQueries({ queryKey: ["admin", "stats"] });
+    },
+    onError: (e) => toast.error(e instanceof Error ? e.message : "Delete failed"),
   });
 
   const stats = statsQ.data;
@@ -112,19 +135,51 @@ function Admin() {
             <Empty text="No open reports." />
           ) : (
             <ul className="space-y-3">
-              {reports.map((r: ReportItem) => (
-                <li key={r.id} className="flex items-center gap-3 rounded-xl bg-surface p-3">
-                  <div className="size-10 grid place-items-center rounded-lg bg-destructive/15 text-destructive"><Flag className="size-4" /></div>
-                  <div className="flex-1 min-w-0">
-                    <div className="font-medium text-sm">{r.reason}</div>
-                    <div className="text-xs text-muted-foreground truncate">
-                      {r.reportedUserName ? `Against ${r.reportedUserName}` : "—"}
-                      {r.createdAt ? ` · ${timeAgo(r.createdAt)}` : ""}
+              {reports.map((r: ReportItem) => {
+                const isContent = r.targetType === "FORUM_POST" || r.targetType === "RESOURCE";
+                const typeLabel = r.targetType === "FORUM_POST" ? "Forum Post"
+                  : r.targetType === "RESOURCE" ? "Resource" : "User";
+                return (
+                  <li key={r.id} className="rounded-xl bg-surface p-3">
+                    <div className="flex items-center gap-3">
+                      <div className="size-10 grid place-items-center rounded-lg bg-destructive/15 text-destructive shrink-0"><Flag className="size-4" /></div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2">
+                          <span className="font-medium text-sm">{r.reason}</span>
+                          <span className="text-[10px] uppercase rounded-full bg-muted px-2 py-0.5 text-muted-foreground">{typeLabel}</span>
+                        </div>
+                        <div className="text-xs text-muted-foreground truncate">
+                          {isContent
+                            ? `"${r.targetTitle ?? "Untitled"}"`
+                            : r.reportedUserName ? `Against ${r.reportedUserName}` : "—"}
+                          {r.createdAt ? ` · ${timeAgo(r.createdAt)}` : ""}
+                        </div>
+                        {r.description && <div className="text-xs text-muted-foreground/80 mt-0.5 truncate">{r.description}</div>}
+                      </div>
+                      <span className={`text-[10px] uppercase rounded-full px-2 py-0.5 shrink-0 ${r.status === "OPEN" ? "bg-warning/15 text-warning" : "bg-success/15 text-success"}`}>{r.status}</span>
                     </div>
-                  </div>
-                  <span className={`text-[10px] uppercase rounded-full px-2 py-0.5 ${r.status === "OPEN" ? "bg-warning/15 text-warning" : "bg-success/15 text-success"}`}>{r.status}</span>
-                </li>
-              ))}
+                    {r.status === "OPEN" && (
+                      <div className="mt-3 flex items-center justify-end gap-2">
+                        <Button size="sm" variant="outline" className="rounded-full" disabled={resolveReport.isPending}
+                          onClick={() => resolveReport.mutate(r.id)}>
+                          Dismiss
+                        </Button>
+                        {isContent && r.targetId != null && (
+                          <Button size="sm" className="rounded-full bg-destructive text-white hover:opacity-95"
+                            disabled={deleteContent.isPending}
+                            onClick={() => {
+                              if (confirm(`Permanently delete this ${typeLabel.toLowerCase()}? This cannot be undone.`)) {
+                                deleteContent.mutate(r);
+                              }
+                            }}>
+                            <Trash2 className="size-3.5" /> Delete {typeLabel}
+                          </Button>
+                        )}
+                      </div>
+                    )}
+                  </li>
+                );
+              })}
             </ul>
           )}
         </div>

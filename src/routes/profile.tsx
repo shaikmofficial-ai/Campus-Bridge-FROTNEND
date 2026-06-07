@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/dialog";
 import { GraduationCap, Mail, Linkedin, Github, Globe, Award, Loader2, AlertCircle, Camera, Building2 } from "lucide-react";
 import { mentorApi, profileApi } from "@/lib/api/campus";
+import { updateCachedUser } from "@/lib/auth";
 import { avatarUrl, titleCase } from "@/lib/ui";
 import type { MentorResponse, ProfileResponse, ProfileUpdatePayload } from "@/lib/api/types";
 
@@ -43,9 +44,11 @@ function Profile() {
 
   const uploadPicture = useMutation({
     mutationFn: (file: File) => profileApi.uploadPicture(file),
-    onSuccess: () => {
+    onSuccess: (updated) => {
       toast.success("Profile picture updated");
       queryClient.invalidateQueries({ queryKey: ["profile", "me"] });
+      // Sync the navbar avatar instantly (global auth cache + event).
+      updateCachedUser({ picture: updated.profilePictureUrl ?? undefined });
     },
     onError: (e) => toast.error(e instanceof Error ? e.message : "Upload failed"),
   });
