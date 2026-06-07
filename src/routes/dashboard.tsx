@@ -4,7 +4,8 @@ import { toast } from "sonner";
 import { AppShell } from "@/components/app-shell";
 import { Button } from "@/components/ui/button";
 import { Users, BookOpen, MessagesSquare, Trophy, Calendar, ArrowUpRight, Rocket, Loader2, AlertCircle } from "lucide-react";
-import { dashboardApi, mentorApi } from "@/lib/api/campus";
+import { dashboardApi, mentorApi, profileApi } from "@/lib/api/campus";
+import { TrendingTutorials } from "@/components/trending-tutorials";
 import { avatarUrl, formatDate, titleCase } from "@/lib/ui";
 import type { ProfileResponse } from "@/lib/api/types";
 
@@ -41,6 +42,9 @@ function Dashboard() {
     queryKey: ["dashboard"],
     queryFn: dashboardApi.get,
   });
+
+  const profileQ = useQuery({ queryKey: ["profile", "me"], queryFn: profileApi.me });
+  const mySkills = profileQ.data?.skills;
 
   const connect = useMutation({
     mutationFn: (mentorId: number) => mentorApi.connect(mentorId),
@@ -163,6 +167,10 @@ function Dashboard() {
                 </ul>
               )}
             </div>
+          </section>
+
+          <section className="mt-8">
+            <TrendingTutorials skills={mySkills} limit={6} />
           </section>
         </>
       )}

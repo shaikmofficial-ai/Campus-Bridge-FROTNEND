@@ -31,6 +31,7 @@ import type {
   ReportPayload,
   ResourceItem,
   StudentResponse,
+  TrendingArticle,
 } from "./types";
 
 // ---------------- Auth ----------------
@@ -158,8 +159,8 @@ export const placementApi = {
   createStory: (payload: { companyName: string; role: string; packageAmount?: string; story: string }) =>
     apiFetch<PlacementStory>("/api/placements/stories", { method: "POST", body: payload }),
   jobs: (params?: { query?: string; location?: string }) =>
-    apiFetch<ExternalJob[]>("/api/placements/jobs", { query: params }),
-  refreshJobs: () => apiFetch<{ refreshed: number }>("/api/placements/jobs/refresh", { method: "POST" }),
+    apiFetch<ExternalJob[]>("/api/jobs", { query: params }),
+  refreshJobs: () => apiFetch<{ refreshed: number }>("/api/jobs/refresh", { method: "POST" }),
 };
 
 // ---------------- Messages ----------------
@@ -180,6 +181,21 @@ export const notificationApi = {
   list: () => apiFetch<NotificationItem[]>("/api/notifications"),
   markRead: (id: number) => apiFetch(`/api/notifications/${id}/read`, { method: "POST" }),
   unreadCount: () => apiFetch<number>("/api/notifications/unread-count"),
+};
+
+// ---------------- Jobs (cached internal board) ----------------
+export const jobApi = {
+  // Serves instantly from the locally cached records (refreshed by the
+  // background JobAutomationService every 6 hours).
+  list: (params?: { query?: string; location?: string }) =>
+    apiFetch<ExternalJob[]>("/api/jobs", { query: params }),
+  refresh: () => apiFetch<{ refreshed: number }>("/api/jobs/refresh", { method: "POST" }),
+};
+
+// ---------------- Trending tutorials (Dev.to) ----------------
+export const educationApi = {
+  trending: (tag?: string, perPage = 10) =>
+    apiFetch<TrendingArticle[]>("/api/resources/trending", { query: { tag, perPage } }),
 };
 
 // ---------------- Mentor Job Board ----------------

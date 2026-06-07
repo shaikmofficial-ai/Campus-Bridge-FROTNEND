@@ -177,6 +177,21 @@ export interface MentorPlacementPayload {
   packageAmount?: string;
 }
 
+/** A trending technical article from the Dev.to feed. */
+export interface TrendingArticle {
+  id: number;
+  title: string;
+  description?: string;
+  url: string;
+  coverImage?: string;
+  authorName?: string;
+  authorAvatar?: string;
+  readingTimeMinutes?: number;
+  reactionsCount?: number;
+  publishedAt?: string;
+  tags?: string[];
+}
+
 /** A student as seen by mentors/alumni (discovery + placement selector). */
 export interface StudentResponse {
   id: number;

@@ -14,9 +14,10 @@ import {
   FileText, Video, BookOpen, FileBox, ListChecks, Download, Bookmark, BookmarkCheck,
   Upload, Loader2, AlertCircle,
 } from "lucide-react";
-import { resourceApi } from "@/lib/api/campus";
+import { resourceApi, profileApi } from "@/lib/api/campus";
 import { apiDownload } from "@/lib/api/client";
 import { ReportButton } from "@/components/report-button";
+import { TrendingTutorials } from "@/components/trending-tutorials";
 import { titleCase } from "@/lib/ui";
 import type { ResourceItem } from "@/lib/api/types";
 
@@ -43,6 +44,8 @@ function Resources() {
 
   const allQ = useQuery({ queryKey: ["resources", "all"], queryFn: () => resourceApi.list(), enabled: !savedOnly });
   const savedQ = useQuery({ queryKey: ["resources", "saved"], queryFn: resourceApi.saved, enabled: savedOnly });
+  const profileQ = useQuery({ queryKey: ["profile", "me"], queryFn: profileApi.me });
+  const mySkills = profileQ.data?.skills;
 
   const source = savedOnly ? savedQ : allQ;
   const items = source.data ?? [];
@@ -77,6 +80,9 @@ function Resources() {
 
   return (
     <AppShell title="Resource Library" subtitle="Curated notes, videos and books from seniors and mentors.">
+      <div className="mb-6">
+        <TrendingTutorials skills={mySkills} limit={6} />
+      </div>
       <div className="flex flex-wrap items-center justify-between gap-3 mb-5">
         <div className="flex flex-wrap gap-2">
           {["All", ...TYPES].map((t) => (
