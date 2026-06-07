@@ -136,11 +136,45 @@ export interface MentorResponse {
   name: string;
   designation?: string;
   company?: string;
+  currentCompany?: string;
+  currentRole?: string;
   rating: number;
   reviewCount: number;
+  placedCount?: number;
   skills?: string[];
   domains?: string[];
   profilePicture?: string;
+}
+
+export interface MentorProfilePayload {
+  designation?: string;
+  company?: string;
+  currentCompany?: string;
+  currentRole?: string;
+  skills?: string[];
+  domains?: string[];
+  available?: boolean;
+}
+
+export interface MentorPlacement {
+  id: number;
+  studentName: string;
+  studentId?: number;
+  batch?: string;
+  company: string;
+  role?: string;
+  packageAmount?: string;
+  studentProfilePictureUrl?: string;
+  createdAt?: string;
+}
+
+export interface MentorPlacementPayload {
+  studentName: string;
+  studentId?: number;
+  batch?: string;
+  company: string;
+  role?: string;
+  packageAmount?: string;
 }
 
 export interface MentorConnection {

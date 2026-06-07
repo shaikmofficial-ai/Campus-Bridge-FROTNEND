@@ -1,8 +1,18 @@
 // Small presentation helpers shared across pages.
 
-/** Stable avatar: use the backend picture if present, else a seeded fallback. */
+import { API_BASE } from "./api/client";
+
+/**
+ * Stable avatar: use the backend picture if present, else a seeded fallback.
+ * Backend-relative paths (e.g. "/uploads/avatars/x.png") are resolved against
+ * the API origin so uploaded images render correctly.
+ */
 export function avatarUrl(picture: string | undefined | null, seed: string | number, size = 120): string {
-  if (picture && picture.trim()) return picture;
+  if (picture && picture.trim()) {
+    const p = picture.trim();
+    if (p.startsWith("/")) return `${API_BASE}${p}`;
+    return p;
+  }
   return `https://i.pravatar.cc/${size}?u=${encodeURIComponent(String(seed))}`;
 }
 

@@ -67,6 +67,7 @@ function Mentorship() {
   const [search, setSearch] = useState("");
   const [keyword, setKeyword] = useState("");
   const [tierFilter, setTierFilter] = useState<"All" | Tier>("All");
+  const [requestedIds, setRequestedIds] = useState<Set<number>>(new Set());
 
   const mentorsQ = useQuery({
     queryKey: ["mentors", keyword],
@@ -78,8 +79,23 @@ function Mentorship() {
 
   const connect = useMutation({
     mutationFn: (mentorId: number) => mentorApi.connect(mentorId),
+    onMutate: (mentorId: number) => {
+      // Optimistically mark this mentor as "requested" so the button updates instantly.
+      setRequestedIds((prev) => new Set(prev).add(mentorId));
+    },
     onSuccess: () => { toast.success("Connection request sent"); queryClient.invalidateQueries({ queryKey: ["mentor-connections"] }); },
-    onError: (e) => toast.error(e instanceof Error ? e.message : "Could not send request"),
+    onError: (e, mentorId) => {
+      // Roll back optimistic state on failure (unless it failed because already sent).
+      const msg = e instanceof Error ? e.message : "Could not send request";
+      if (!/already/i.test(msg)) {
+        setRequestedIds((prev) => {
+          const next = new Set(prev);
+          next.delete(mentorId);
+          return next;
+        });
+      }
+      toast.error(msg);
+    },
   });
   const respond = useMutation({
     mutationFn: ({ id, action }: { id: number; action: "accept" | "reject" }) =>
@@ -100,6 +116,14 @@ function Mentorship() {
   const mentors = mentorsQ.data ?? [];
   const connections = connectionsQ.data ?? [];
   const pending = pendingQ.data ?? [];
+
+  // Mentor user-ids the student has already requested/connected with (any status).
+  const connectedMentorIds = useMemo(
+    () => new Set(connections.map((c) => c.mentorId)),
+    [connections],
+  );
+  const isRequested = (mentorId: number) =>
+    requestedIds.has(mentorId) || connectedMentorIds.has(mentorId);
 
   const ranked = useMemo(
     () => [...mentors].map((m) => ({ m, impact: impactOf(m), tier: tierOf(impactOf(m)) }))
@@ -227,7 +251,11 @@ function Mentorship() {
                           <div className="font-semibold text-sm truncate">{r.m.name}</div>
                           <TierBadge tier={r.tier} />
                         </div>
-                        <div className="text-xs text-muted-foreground truncate">{[r.m.designation, r.m.company].filter(Boolean).join(" · ") || "Mentor"}</div>
+                        <div className="text-xs text-muted-foreground truncate">
+                          {(r.m.currentRole || r.m.currentCompany)
+                            ? [r.m.currentRole, r.m.currentCompany].filter(Boolean).join(" at ")
+                            : ([r.m.designation, r.m.company].filter(Boolean).join(" · ") || "Mentor")}
+                        </div>
                       </div>
                       <div className="hidden sm:flex gap-5 text-center text-xs">
                         <div><div className="font-bold text-foreground flex items-center gap-1 justify-center"><Star className="size-3 fill-warning text-warning" />{(r.m.rating ?? 0).toFixed(1)}</div><div className="text-muted-foreground">rating</div></div>
@@ -311,6 +339,11 @@ function Mentorship() {
                         <div className="flex-1 min-w-0">
                           <div className="font-semibold leading-tight truncate">{m.name}</div>
                           <div className="text-xs text-muted-foreground truncate">{[m.designation, m.company].filter(Boolean).join(" · ") || "Mentor"}</div>
+                          {(m.currentRole || m.currentCompany) && (
+                            <div className="text-[11px] font-medium text-primary truncate mt-0.5">
+                              {[m.currentRole, m.currentCompany].filter(Boolean).join(" at ")}
+                            </div>
+                          )}
                           <div className="mt-1.5"><TierBadge tier={tier} /></div>
                         </div>
                       </div>
@@ -323,9 +356,10 @@ function Mentorship() {
                         <div className="flex items-center gap-1 text-xs font-medium text-success"><TrendingUp className="size-3.5" /> {tier}</div>
                       </div>
 
-                      <div className="mt-3 grid grid-cols-2 gap-2 text-center">
+                      <div className="mt-3 grid grid-cols-3 gap-2 text-center">
                         <MiniStat value={<span className="flex items-center justify-center gap-0.5"><Star className="size-3 fill-warning text-warning" />{(m.rating ?? 0).toFixed(1)}</span>} label="Rating" />
                         <MiniStat value={m.reviewCount ?? 0} label="Reviews" />
+                        <MiniStat value={m.placedCount ?? 0} label="Placed" />
                       </div>
 
                       {(m.skills?.length || m.domains?.length) ? (
@@ -338,7 +372,27 @@ function Mentorship() {
 
                       <div className="mt-4 flex gap-2">
                         <Button size="sm" variant="outline" className="rounded-full flex-1" onClick={() => startChat.mutate(m.id)}>Message</Button>
-                        <Button size="sm" className="rounded-full flex-1 bg-gradient-primary text-primary-foreground" disabled={connect.isPending} onClick={() => connect.mutate(m.id)}>Connect</Button>
+                        {isRequested(m.id) ? (
+                          <Button
+                            size="sm"
+                            variant="secondary"
+                            disabled
+                            className="rounded-full flex-1 bg-muted text-muted-foreground cursor-not-allowed hover:bg-muted"
+                          >
+                            <Check className="size-3.5" /> Connection Sent
+                          </Button>
+                        ) : (
+                          <Button
+                            size="sm"
+                            className="rounded-full flex-1 bg-gradient-primary text-primary-foreground"
+                            disabled={connect.isPending && connect.variables === m.id}
+                            onClick={() => connect.mutate(m.id)}
+                          >
+                            {connect.isPending && connect.variables === m.id ? (
+                              <><Loader2 className="size-3.5 animate-spin" /> Sending…</>
+                            ) : "Connect"}
+                          </Button>
+                        )}
                       </div>
                     </div>
                   );

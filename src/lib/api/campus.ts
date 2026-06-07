@@ -17,6 +17,9 @@ import type {
   MentorConnection,
   MentorJob,
   MentorJobPayload,
+  MentorPlacement,
+  MentorPlacementPayload,
+  MentorProfilePayload,
   MentorResponse,
   NotificationItem,
   PlacementDrive,
@@ -52,12 +55,21 @@ export const profileApi = {
   byId: (id: number) => apiFetch<ProfileResponse>(`/api/profile/${id}`),
   update: (payload: ProfileUpdatePayload) =>
     apiFetch<ProfileResponse>("/api/profile", { method: "PUT", body: payload }),
+  uploadPicture: (file: File) => {
+    const form = new FormData();
+    form.append("file", file);
+    return apiFetch<ProfileResponse>("/api/profile/picture", { method: "POST", formData: form });
+  },
 };
 
 // ---------------- Mentors ----------------
 export const mentorApi = {
   list: (params?: { domain?: string; keyword?: string }) =>
     apiFetch<MentorResponse[]>("/api/mentors", { query: params }),
+  profile: (mentorUserId: number) =>
+    apiFetch<MentorResponse>(`/api/mentors/${mentorUserId}/profile`),
+  updateMyProfile: (payload: MentorProfilePayload) =>
+    apiFetch<MentorResponse>("/api/mentors/profile", { method: "PUT", body: payload }),
   connect: (mentorUserId: number) =>
     apiFetch<string>(`/api/mentors/${mentorUserId}/connect`, { method: "POST" }),
   acceptRequest: (requestId: number) =>
@@ -67,6 +79,13 @@ export const mentorApi = {
   connections: () => apiFetch<MentorConnection[]>("/api/mentors/connections"),
   pending: () => apiFetch<MentorConnection[]>("/api/mentors/pending"),
   sent: () => apiFetch<MentorConnection[]>("/api/mentors/sent"),
+  // Placement tracker ("Students Placed Under Guidance")
+  placements: (mentorUserId: number) =>
+    apiFetch<MentorPlacement[]>(`/api/mentors/${mentorUserId}/placements`),
+  addPlacement: (payload: MentorPlacementPayload) =>
+    apiFetch<MentorPlacement>("/api/mentors/placements", { method: "POST", body: payload }),
+  removePlacement: (id: number) =>
+    apiFetch(`/api/mentors/placements/${id}`, { method: "DELETE" }),
 };
 
 // ---------------- Forum ----------------
