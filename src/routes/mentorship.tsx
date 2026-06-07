@@ -114,6 +114,8 @@ function Mentorship() {
       toast.success(v.action === "accept" ? "Request accepted" : "Request rejected");
       queryClient.invalidateQueries({ queryKey: ["mentor-pending"] });
       queryClient.invalidateQueries({ queryKey: ["mentor-connections"] });
+      queryClient.invalidateQueries({ queryKey: ["dashboard"] });
+      queryClient.invalidateQueries({ queryKey: ["connected-students"] });
     },
     onError: (e) => toast.error(e instanceof Error ? e.message : "Action failed"),
   });
