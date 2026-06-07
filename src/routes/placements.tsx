@@ -23,7 +23,7 @@ export const Route = createFileRoute("/placements")({
 
 function Placements() {
   const isAdmin = getUser()?.role === "admin";
-  const isMentor = getUser()?.role === "mentor";
+  const isMentor = getUser()?.role === "mentor" || getUser()?.role === "alumni";
   const [driveOpen, setDriveOpen] = useState(false);
   const [storyOpen, setStoryOpen] = useState(false);
 

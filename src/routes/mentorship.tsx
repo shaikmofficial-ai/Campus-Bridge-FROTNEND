@@ -8,10 +8,10 @@ import {
   Star, Search, Trophy, Award, Crown, Medal, Sparkles, TrendingUp,
   Users, GraduationCap, Briefcase, MessageCircle, Check, X, ChevronRight, Loader2, AlertCircle,
 } from "lucide-react";
-import { mentorApi, messageApi } from "@/lib/api/campus";
+import { mentorApi, messageApi, studentApi } from "@/lib/api/campus";
 import { getUser } from "@/lib/auth";
 import { avatarUrl } from "@/lib/ui";
-import type { MentorConnection, MentorResponse } from "@/lib/api/types";
+import type { MentorConnection, MentorResponse, StudentResponse } from "@/lib/api/types";
 
 export const Route = createFileRoute("/mentorship")({
   head: () => ({ meta: [{ title: "Mentorship Hub · CampusBridge" }] }),
@@ -61,7 +61,8 @@ function TierBadge({ tier, size = "sm" }: { tier: Tier; size?: "sm" | "md" }) {
 
 function Mentorship() {
   const user = getUser();
-  const isMentor = user?.role === "mentor";
+  // Alumni and mentors share the "guide students" view (see students, not mentors).
+  const isMentor = user?.role === "mentor" || user?.role === "alumni";
   const queryClient = useQueryClient();
   const navigate = useNavigate();
   const [search, setSearch] = useState("");
@@ -69,10 +70,19 @@ function Mentorship() {
   const [tierFilter, setTierFilter] = useState<"All" | Tier>("All");
   const [requestedIds, setRequestedIds] = useState<Set<number>>(new Set());
 
+  // Mentor/alumni student discovery (skill-based matching).
+  const [studentSkill, setStudentSkill] = useState("");
+  const [studentSkillQuery, setStudentSkillQuery] = useState("");
+
   const mentorsQ = useQuery({
     queryKey: ["mentors", keyword],
     queryFn: () => mentorApi.list({ keyword: keyword || undefined }),
     enabled: !isMentor,
+  });
+  const studentsQ = useQuery({
+    queryKey: ["discover-students", studentSkillQuery],
+    queryFn: () => studentApi.discover({ skill: studentSkillQuery || undefined }),
+    enabled: isMentor,
   });
   const connectionsQ = useQuery({ queryKey: ["mentor-connections"], queryFn: mentorApi.connections });
   const pendingQ = useQuery({ queryKey: ["mentor-pending"], queryFn: mentorApi.pending, enabled: isMentor });
@@ -224,6 +234,78 @@ function Mentorship() {
         )}
       </section>
 
+      {/* Student Discovery — mentors/alumni only (skill-based matching) */}
+      {isMentor && (
+        <section className="mb-10">
+          <div className="flex items-center gap-2 mb-3">
+            <div className="size-9 grid place-items-center rounded-xl bg-gradient-primary text-primary-foreground"><Users className="size-4" /></div>
+            <div>
+              <h3 className="font-semibold">Discover Students</h3>
+              <p className="text-xs text-muted-foreground">Scout students by skill and guide them toward placements.</p>
+            </div>
+          </div>
+
+          {/* Skill filter */}
+          <form
+            onSubmit={(e) => { e.preventDefault(); setStudentSkillQuery(studentSkill.trim()); }}
+            className="rounded-2xl border border-border bg-card p-3 flex items-center gap-2 mb-4"
+          >
+            <Search className="size-4 text-muted-foreground ml-2" />
+            <input
+              value={studentSkill}
+              onChange={(e) => setStudentSkill(e.target.value)}
+              placeholder="Filter by skill — e.g. Python, React, Solidity…"
+              className="flex-1 bg-transparent outline-none text-sm py-1.5"
+            />
+            {studentSkillQuery && (
+              <Button type="button" variant="ghost" size="sm" className="rounded-full"
+                onClick={() => { setStudentSkill(""); setStudentSkillQuery(""); }}>
+                Clear
+              </Button>
+            )}
+            <Button type="submit" className="rounded-full bg-gradient-primary text-primary-foreground">Search</Button>
+          </form>
+
+          {studentsQ.isLoading ? <Loading /> : studentsQ.isError ? (
+            <ErrorBox msg={studentsQ.error instanceof Error ? studentsQ.error.message : "Failed to load students."} />
+          ) : (studentsQ.data ?? []).length === 0 ? (
+            <Empty text={studentSkillQuery ? `No students found with skill "${studentSkillQuery}".` : "No students to show yet."} />
+          ) : (
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+              {(studentsQ.data ?? []).map((s: StudentResponse) => (
+                <div key={s.id} className="rounded-2xl border border-border bg-card p-5 hover:shadow-elegant transition-all">
+                  <div className="flex items-start gap-3">
+                    <img src={avatarUrl(s.profilePictureUrl, s.email)} alt="" className="size-12 rounded-full object-cover ring-2 ring-card" />
+                    <div className="flex-1 min-w-0">
+                      <div className="font-semibold leading-tight truncate">{s.name}</div>
+                      <div className="text-xs text-muted-foreground truncate">
+                        {[s.department, s.batch ? `Batch ${s.batch}` : null].filter(Boolean).join(" · ") || "Student"}
+                      </div>
+                    </div>
+                  </div>
+                  {s.bio && <p className="mt-3 text-xs text-muted-foreground line-clamp-2">{s.bio}</p>}
+                  {s.skills && s.skills.length > 0 && (
+                    <div className="mt-3 flex flex-wrap gap-1">
+                      {s.skills.slice(0, 5).map((skill) => {
+                        const match = studentSkillQuery && skill.toLowerCase().includes(studentSkillQuery.toLowerCase());
+                        return (
+                          <span key={skill} className={`text-[10px] uppercase rounded-full px-2 py-0.5 font-medium ${match ? "bg-gradient-primary text-primary-foreground" : "bg-accent text-primary"}`}>{skill}</span>
+                        );
+                      })}
+                    </div>
+                  )}
+                  <div className="mt-4">
+                    <Button size="sm" variant="outline" className="rounded-full w-full" onClick={() => startChat.mutate(s.id)}>
+                      <MessageCircle className="size-3.5" /> Message
+                    </Button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </section>
+      )}
+
       {/* Leaderboard + Recognition tiers (students) */}
       {!isMentor && (
         <>
@@ -339,14 +421,22 @@ function Mentorship() {
                         <div className="flex-1 min-w-0">
                           <div className="font-semibold leading-tight truncate">{m.name}</div>
                           <div className="text-xs text-muted-foreground truncate">{[m.designation, m.company].filter(Boolean).join(" · ") || "Mentor"}</div>
-                          {(m.currentRole || m.currentCompany) && (
-                            <div className="text-[11px] font-medium text-primary truncate mt-0.5">
-                              {[m.currentRole, m.currentCompany].filter(Boolean).join(" at ")}
-                            </div>
-                          )}
                           <div className="mt-1.5"><TierBadge tier={tier} /></div>
                         </div>
                       </div>
+
+                      {/* Prominent Company + Role so students can match by career target */}
+                      {(() => {
+                        const roleAtCompany = (m.currentRole || m.currentCompany)
+                          ? [m.currentRole, m.currentCompany].filter(Boolean).join(" at ")
+                          : [m.designation, m.company].filter(Boolean).join(" at ");
+                        return roleAtCompany ? (
+                          <div className="mt-3 flex items-center gap-2 rounded-xl bg-primary/10 ring-1 ring-primary/20 px-3 py-2">
+                            <Briefcase className="size-3.5 text-primary shrink-0" />
+                            <span className="text-xs font-semibold text-primary truncate">{roleAtCompany}</span>
+                          </div>
+                        ) : null;
+                      })()}
 
                       <div className="mt-4 rounded-xl bg-gradient-to-br from-accent/60 to-transparent p-3 flex items-center justify-between">
                         <div>

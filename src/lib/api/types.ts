@@ -177,6 +177,19 @@ export interface MentorPlacementPayload {
   packageAmount?: string;
 }
 
+/** A student as seen by mentors/alumni (discovery + placement selector). */
+export interface StudentResponse {
+  id: number;
+  name: string;
+  email: string;
+  registerNumber?: string;
+  department?: string;
+  batch?: string;
+  bio?: string;
+  skills?: string[];
+  profilePictureUrl?: string;
+}
+
 export interface MentorConnection {
   id: number;
   mentorId: number;

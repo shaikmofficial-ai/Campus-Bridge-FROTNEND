@@ -375,13 +375,23 @@ function PlacementTracker({ mentorUserId, canManage }: { mentorUserId: number; c
 
 function AddPlacementDialog({ open, onOpenChange, mentorUserId }: { open: boolean; onOpenChange: (v: boolean) => void; mentorUserId: number }) {
   const queryClient = useQueryClient();
-  const [f, setF] = useState({ studentName: "", batch: "", company: "", role: "", packageAmount: "" });
+  const [f, setF] = useState({ studentId: "", batch: "", company: "", role: "", packageAmount: "" });
   const set = (k: keyof typeof f, v: string) => setF((p) => ({ ...p, [k]: v }));
+
+  // Only students with an ACCEPTED connection to this mentor can be placed.
+  const studentsQ = useQuery({
+    queryKey: ["connected-students"],
+    queryFn: mentorApi.connectedStudents,
+    enabled: open,
+  });
+  const students = studentsQ.data ?? [];
+  const selected = students.find((s) => String(s.id) === f.studentId);
 
   const mutation = useMutation({
     mutationFn: () => mentorApi.addPlacement({
-      studentName: f.studentName.trim(),
-      batch: f.batch.trim() || undefined,
+      studentId: selected!.id,
+      studentName: selected!.name,
+      batch: (f.batch.trim() || selected?.batch) || undefined,
       company: f.company.trim(),
       role: f.role.trim() || undefined,
       packageAmount: f.packageAmount.trim() || undefined,
@@ -390,7 +400,7 @@ function AddPlacementDialog({ open, onOpenChange, mentorUserId }: { open: boolea
       toast.success("Placement added");
       queryClient.invalidateQueries({ queryKey: ["mentor-placements", mentorUserId] });
       queryClient.invalidateQueries({ queryKey: ["mentor-profile", mentorUserId] });
-      setF({ studentName: "", batch: "", company: "", role: "", packageAmount: "" });
+      setF({ studentId: "", batch: "", company: "", role: "", packageAmount: "" });
       onOpenChange(false);
     },
     onError: (e) => toast.error(e instanceof Error ? e.message : "Could not add placement"),
@@ -401,12 +411,35 @@ function AddPlacementDialog({ open, onOpenChange, mentorUserId }: { open: boolea
       <DialogContent className="max-w-md">
         <DialogHeader>
           <DialogTitle>Add Placement Record</DialogTitle>
-          <DialogDescription>Track a student you helped get placed.</DialogDescription>
+          <DialogDescription>Record a placement for a student connected with you.</DialogDescription>
         </DialogHeader>
         <div className="space-y-3">
-          <div className="space-y-1.5"><Label>Student Name</Label><Input value={f.studentName} onChange={(e) => set("studentName", e.target.value)} placeholder="Karthik R" /></div>
+          <div className="space-y-1.5">
+            <Label htmlFor="placement-student">Student</Label>
+            {studentsQ.isLoading ? (
+              <div className="flex items-center gap-2 text-sm text-muted-foreground py-2"><Loader2 className="size-4 animate-spin" /> Loading your students…</div>
+            ) : students.length === 0 ? (
+              <p className="text-sm text-muted-foreground rounded-lg border border-dashed border-border p-3">
+                No connected students yet. Accept a student's connection request first, then you can record their placement.
+              </p>
+            ) : (
+              <select
+                id="placement-student"
+                value={f.studentId}
+                onChange={(e) => set("studentId", e.target.value)}
+                className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              >
+                <option value="">Select a connected student…</option>
+                {students.map((s) => (
+                  <option key={s.id} value={s.id}>
+                    {s.name}{s.registerNumber ? ` (${s.registerNumber})` : ""}{s.batch ? ` · ${s.batch}` : ""}
+                  </option>
+                ))}
+              </select>
+            )}
+          </div>
           <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-1.5"><Label>Batch</Label><Input value={f.batch} onChange={(e) => set("batch", e.target.value)} placeholder="2025" /></div>
+            <div className="space-y-1.5"><Label>Batch</Label><Input value={f.batch} onChange={(e) => set("batch", e.target.value)} placeholder={selected?.batch || "2025"} /></div>
             <div className="space-y-1.5"><Label>Company</Label><Input value={f.company} onChange={(e) => set("company", e.target.value)} placeholder="Zoho" /></div>
           </div>
           <div className="grid grid-cols-2 gap-3">
@@ -416,7 +449,7 @@ function AddPlacementDialog({ open, onOpenChange, mentorUserId }: { open: boolea
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
-          <Button onClick={() => mutation.mutate()} disabled={mutation.isPending || !f.studentName.trim() || !f.company.trim()} className="bg-gradient-primary text-primary-foreground">
+          <Button onClick={() => mutation.mutate()} disabled={mutation.isPending || !selected || !f.company.trim()} className="bg-gradient-primary text-primary-foreground">
             {mutation.isPending ? <><Loader2 className="mr-1 size-4 animate-spin" /> Adding…</> : "Add"}
           </Button>
         </DialogFooter>

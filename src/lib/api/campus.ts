@@ -30,6 +30,7 @@ import type {
   ReportItem,
   ReportPayload,
   ResourceItem,
+  StudentResponse,
 } from "./types";
 
 // ---------------- Auth ----------------
@@ -86,6 +87,15 @@ export const mentorApi = {
     apiFetch<MentorPlacement>("/api/mentors/placements", { method: "POST", body: payload }),
   removePlacement: (id: number) =>
     apiFetch(`/api/mentors/placements/${id}`, { method: "DELETE" }),
+  // Students with an ACCEPTED connection to the calling mentor (placement selector).
+  connectedStudents: () => apiFetch<StudentResponse[]>("/api/mentors/connected-students"),
+};
+
+// ---------------- Students (mentor/alumni discovery) ----------------
+export const studentApi = {
+  // Skill-based student discovery for mentors/alumni. Never returns mentors.
+  discover: (params?: { skill?: string; keyword?: string }) =>
+    apiFetch<StudentResponse[]>("/api/students", { query: params }),
 };
 
 // ---------------- Forum ----------------
