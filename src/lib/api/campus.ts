@@ -34,6 +34,9 @@ import type {
   TrendingArticle,
   Snapshot,
   PublicProfile,
+  LearningNode,
+  CodeRunResult,
+  LeaderboardEntry,
 } from "./types";
 
 // ---------------- Auth ----------------
@@ -236,4 +239,16 @@ export const adminApi = {
 // ---------------- Analytics (PRI growth) ----------------
 export const analyticsApi = {
   snapshots: (userId: number) => apiFetch<Snapshot[]>(`/api/analytics/snapshots/${userId}`),
+};
+
+// ---------------- Learn Coding ----------------
+export const learningApi = {
+  roadmap: () => apiFetch<LearningNode[]>("/api/learning/roadmap"),
+  submit: (payload: { moduleOrderId: number; code: string; languageId?: number }) =>
+    apiFetch<CodeRunResult>("/api/learning/submit", { method: "POST", body: payload }),
+};
+
+// ---------------- Leaderboard ----------------
+export const leaderboardApi = {
+  global: () => apiFetch<LeaderboardEntry[]>("/api/leaderboard/global"),
 };

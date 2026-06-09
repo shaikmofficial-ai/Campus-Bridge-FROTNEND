@@ -6,6 +6,7 @@ const logo = logoAsset;
 import {
   LayoutDashboard, Users, MessagesSquare, BookOpen, Briefcase,
   Bell, Bookmark, UserCircle2, Settings, LogOut, Search, ShieldCheck, Loader2, Check,
+  GraduationCap, Trophy,
 } from "lucide-react";
 import { getUser, signOut, type AuthUser, type Role } from "@/lib/auth";
 import { notificationApi } from "@/lib/api/campus";
@@ -14,6 +15,8 @@ import { avatarUrl, timeAgo } from "@/lib/ui";
 
 const nav = [
   { to: "/dashboard", icon: LayoutDashboard, label: "Dashboard" },
+  { to: "/learn", icon: GraduationCap, label: "Learn Coding" },
+  { to: "/leaderboard", icon: Trophy, label: "Leaderboard" },
   { to: "/mentorship", icon: Users, label: "Mentors" },
   { to: "/forum", icon: MessagesSquare, label: "Forum" },
   { to: "/resources", icon: BookOpen, label: "Resources" },

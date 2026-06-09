@@ -12,6 +12,8 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as ResourcesRouteImport } from './routes/resources'
 import { Route as RegisterRouteImport } from './routes/register'
 import { Route as ProfileRouteImport } from './routes/profile'
+import { Route as LearnRouteImport } from './routes/learn'
+import { Route as LeaderboardRouteImport } from './routes/leaderboard'
 import { Route as ProfileUserIdRouteImport } from './routes/profile.$userId'
 import { Route as PlacementsRouteImport } from './routes/placements'
 import { Route as MentorshipRouteImport } from './routes/mentorship'
@@ -35,6 +37,16 @@ const ProfileRoute = ProfileRouteImport.update({
 const ProfileUserIdRoute = ProfileUserIdRouteImport.update({
   id: '/profile/$userId',
   path: '/profile/$userId',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LearnRoute = LearnRouteImport.update({
+  id: '/learn',
+  path: '/learn',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LeaderboardRoute = LeaderboardRouteImport.update({
+  id: '/leaderboard',
+  path: '/leaderboard',
   getParentRoute: () => rootRouteImport,
 } as any)
 const RegisterRoute = RegisterRouteImport.update({
@@ -89,6 +101,8 @@ export interface FileRoutesByFullPath {
   '/chat': typeof ChatRoute
   '/dashboard': typeof DashboardRoute
   '/forum': typeof ForumRoute
+  '/leaderboard': typeof LeaderboardRoute
+  '/learn': typeof LearnRoute
   '/login': typeof LoginRoute
   '/mentorship': typeof MentorshipRoute
   '/placements': typeof PlacementsRoute
@@ -103,6 +117,8 @@ export interface FileRoutesByTo {
   '/chat': typeof ChatRoute
   '/dashboard': typeof DashboardRoute
   '/forum': typeof ForumRoute
+  '/leaderboard': typeof LeaderboardRoute
+  '/learn': typeof LearnRoute
   '/login': typeof LoginRoute
   '/mentorship': typeof MentorshipRoute
   '/placements': typeof PlacementsRoute
@@ -118,6 +134,8 @@ export interface FileRoutesById {
   '/chat': typeof ChatRoute
   '/dashboard': typeof DashboardRoute
   '/forum': typeof ForumRoute
+  '/leaderboard': typeof LeaderboardRoute
+  '/learn': typeof LearnRoute
   '/login': typeof LoginRoute
   '/mentorship': typeof MentorshipRoute
   '/placements': typeof PlacementsRoute
@@ -134,6 +152,8 @@ export interface FileRouteTypes {
     | '/chat'
     | '/dashboard'
     | '/forum'
+    | '/leaderboard'
+    | '/learn'
     | '/login'
     | '/mentorship'
     | '/placements'
@@ -148,6 +168,8 @@ export interface FileRouteTypes {
     | '/chat'
     | '/dashboard'
     | '/forum'
+    | '/leaderboard'
+    | '/learn'
     | '/login'
     | '/mentorship'
     | '/placements'
@@ -162,6 +184,8 @@ export interface FileRouteTypes {
     | '/chat'
     | '/dashboard'
     | '/forum'
+    | '/leaderboard'
+    | '/learn'
     | '/login'
     | '/mentorship'
     | '/placements'
@@ -177,6 +201,8 @@ export interface RootRouteChildren {
   ChatRoute: typeof ChatRoute
   DashboardRoute: typeof DashboardRoute
   ForumRoute: typeof ForumRoute
+  LeaderboardRoute: typeof LeaderboardRoute
+  LearnRoute: typeof LearnRoute
   LoginRoute: typeof LoginRoute
   MentorshipRoute: typeof MentorshipRoute
   PlacementsRoute: typeof PlacementsRoute
@@ -188,6 +214,20 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/leaderboard': {
+      id: '/leaderboard'
+      path: '/leaderboard'
+      fullPath: '/leaderboard'
+      preLoaderRoute: typeof LeaderboardRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/learn': {
+      id: '/learn'
+      path: '/learn'
+      fullPath: '/learn'
+      preLoaderRoute: typeof LearnRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/profile/$userId': {
       id: '/profile/$userId'
       path: '/profile/$userId'
@@ -281,6 +321,8 @@ const rootRouteChildren: RootRouteChildren = {
   ChatRoute: ChatRoute,
   DashboardRoute: DashboardRoute,
   ForumRoute: ForumRoute,
+  LeaderboardRoute: LeaderboardRoute,
+  LearnRoute: LearnRoute,
   LoginRoute: LoginRoute,
   MentorshipRoute: MentorshipRoute,
   PlacementsRoute: PlacementsRoute,

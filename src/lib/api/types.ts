@@ -53,6 +53,44 @@ export interface Snapshot {
   score: number;
 }
 
+/** A node on the Learn Coding roadmap. */
+export interface LearningNode {
+  id: number;
+  orderIndex: number;
+  title: string;
+  content?: string;
+  mission?: string;
+  starterCode?: string;
+  languageId: number;
+  language?: string;
+  state: "LOCKED" | "ACTIVE" | "COMPLETED";
+}
+
+/** Result of running/checking a code submission. */
+export interface CodeRunResult {
+  passed: boolean;
+  stdout?: string;
+  stderr?: string;
+  compileOutput?: string;
+  status?: string;
+  pointsAwarded: boolean;
+  pointsEarned: number;
+  unlockedNextOrderId?: number | null;
+  message?: string;
+}
+
+/** A row in the Campus Toppers leaderboard. */
+export interface LeaderboardEntry {
+  rank: number;
+  userId: number;
+  name: string;
+  department?: string;
+  batch?: string;
+  profilePictureUrl?: string;
+  lessonsSolved: number;
+  totalPoints: number;
+}
+
 /** Public, read-only portfolio view (no private/admin fields). */
 export interface PublicProfile {
   id: number;
