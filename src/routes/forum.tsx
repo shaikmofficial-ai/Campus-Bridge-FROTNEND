@@ -176,7 +176,16 @@ function PostRow({ post: p, onClick }: { post: ForumPost; onClick: () => void })
         )}
         <div className="mt-1 font-semibold truncate">{p.title}</div>
         <div className="text-xs text-muted-foreground">
-          {p.author?.name ?? "Unknown"}{p.createdAt ? ` · ${timeAgo(p.createdAt)}` : ""}
+          {p.author?.id ? (
+            <a
+              href={`/profile/${p.author.id}`}
+              onClick={(e) => e.stopPropagation()}
+              className="hover:text-primary hover:underline font-medium"
+            >
+              {p.author?.name ?? "Unknown"}
+            </a>
+          ) : (p.author?.name ?? "Unknown")}
+          {p.createdAt ? ` · ${timeAgo(p.createdAt)}` : ""}
         </div>
       </div>
       <div className="flex items-center gap-4 text-xs text-muted-foreground tabular-nums">

@@ -43,6 +43,31 @@ export interface ProfileResponse {
   achievements?: string[];
   communityPoints: number;
   accountStatus: "PENDING" | "APPROVED" | "REJECTED";
+  accountState?: "ACTIVE" | "BANNED";
+}
+
+/** A PRI snapshot point for the growth chart. */
+export interface Snapshot {
+  id: number;
+  date: string; // ISO date
+  score: number;
+}
+
+/** Public, read-only portfolio view (no private/admin fields). */
+export interface PublicProfile {
+  id: number;
+  name: string;
+  role: string;
+  department?: string;
+  batch?: string;
+  bio?: string;
+  linkedinUrl?: string;
+  githubUrl?: string;
+  portfolioUrl?: string;
+  profilePictureUrl?: string;
+  skills?: string[];
+  achievements?: string[];
+  communityPoints: number;
 }
 
 export interface ProfileUpdatePayload {

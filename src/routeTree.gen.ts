@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as ResourcesRouteImport } from './routes/resources'
 import { Route as RegisterRouteImport } from './routes/register'
 import { Route as ProfileRouteImport } from './routes/profile'
+import { Route as ProfileUserIdRouteImport } from './routes/profile.$userId'
 import { Route as PlacementsRouteImport } from './routes/placements'
 import { Route as MentorshipRouteImport } from './routes/mentorship'
 import { Route as LoginRouteImport } from './routes/login'
@@ -29,6 +30,11 @@ const ResourcesRoute = ResourcesRouteImport.update({
 const ProfileRoute = ProfileRouteImport.update({
   id: '/profile',
   path: '/profile',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ProfileUserIdRoute = ProfileUserIdRouteImport.update({
+  id: '/profile/$userId',
+  path: '/profile/$userId',
   getParentRoute: () => rootRouteImport,
 } as any)
 const RegisterRoute = RegisterRouteImport.update({
@@ -87,6 +93,7 @@ export interface FileRoutesByFullPath {
   '/mentorship': typeof MentorshipRoute
   '/placements': typeof PlacementsRoute
   '/profile': typeof ProfileRoute
+  '/profile/$userId': typeof ProfileUserIdRoute
   '/register': typeof RegisterRoute
   '/resources': typeof ResourcesRoute
 }
@@ -100,6 +107,7 @@ export interface FileRoutesByTo {
   '/mentorship': typeof MentorshipRoute
   '/placements': typeof PlacementsRoute
   '/profile': typeof ProfileRoute
+  '/profile/$userId': typeof ProfileUserIdRoute
   '/register': typeof RegisterRoute
   '/resources': typeof ResourcesRoute
 }
@@ -114,6 +122,7 @@ export interface FileRoutesById {
   '/mentorship': typeof MentorshipRoute
   '/placements': typeof PlacementsRoute
   '/profile': typeof ProfileRoute
+  '/profile/$userId': typeof ProfileUserIdRoute
   '/register': typeof RegisterRoute
   '/resources': typeof ResourcesRoute
 }
@@ -129,6 +138,7 @@ export interface FileRouteTypes {
     | '/mentorship'
     | '/placements'
     | '/profile'
+    | '/profile/$userId'
     | '/register'
     | '/resources'
   fileRoutesByTo: FileRoutesByTo
@@ -142,6 +152,7 @@ export interface FileRouteTypes {
     | '/mentorship'
     | '/placements'
     | '/profile'
+    | '/profile/$userId'
     | '/register'
     | '/resources'
   id:
@@ -155,6 +166,7 @@ export interface FileRouteTypes {
     | '/mentorship'
     | '/placements'
     | '/profile'
+    | '/profile/$userId'
     | '/register'
     | '/resources'
   fileRoutesById: FileRoutesById
@@ -169,12 +181,20 @@ export interface RootRouteChildren {
   MentorshipRoute: typeof MentorshipRoute
   PlacementsRoute: typeof PlacementsRoute
   ProfileRoute: typeof ProfileRoute
+  ProfileUserIdRoute: typeof ProfileUserIdRoute
   RegisterRoute: typeof RegisterRoute
   ResourcesRoute: typeof ResourcesRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/profile/$userId': {
+      id: '/profile/$userId'
+      path: '/profile/$userId'
+      fullPath: '/profile/$userId'
+      preLoaderRoute: typeof ProfileUserIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/register': {
       id: '/register'
       path: '/register'
@@ -265,6 +285,7 @@ const rootRouteChildren: RootRouteChildren = {
   MentorshipRoute: MentorshipRoute,
   PlacementsRoute: PlacementsRoute,
   ProfileRoute: ProfileRoute,
+  ProfileUserIdRoute: ProfileUserIdRoute,
   RegisterRoute: RegisterRoute,
   ResourcesRoute: ResourcesRoute,
 }

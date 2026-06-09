@@ -1,11 +1,12 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { AppShell } from "@/components/app-shell";
 import { Button } from "@/components/ui/button";
 import {
   Users, ShieldCheck, Flag, GraduationCap, CheckCircle2, XCircle, Loader2, AlertCircle,
-  BookOpen, MessagesSquare, Briefcase, Trash2,
+  BookOpen, MessagesSquare, Briefcase, Trash2, Search, Ban,
 } from "lucide-react";
 import { adminApi } from "@/lib/api/campus";
 import { avatarUrl, timeAgo, titleCase } from "@/lib/ui";
@@ -184,7 +185,118 @@ function Admin() {
           )}
         </div>
       </div>
+
+      <StudentDirectory />
     </AppShell>
+  );
+}
+
+function StudentDirectory() {
+  const queryClient = useQueryClient();
+  const [search, setSearch] = useState("");
+  const [query, setQuery] = useState("");
+
+  const usersQ = useQuery({
+    queryKey: ["admin", "users", query],
+    queryFn: () => (query ? adminApi.searchUsers(query) : adminApi.users()),
+  });
+  const users = usersQ.data ?? [];
+
+  const ban = useMutation({
+    mutationFn: ({ id, banned }: { id: number; banned: boolean }) =>
+      banned ? adminApi.banUser(id) : adminApi.unbanUser(id),
+    onSuccess: (_d, v) => {
+      toast.success(v.banned ? "User banned" : "Ban lifted");
+      queryClient.invalidateQueries({ queryKey: ["admin", "users"] });
+    },
+    onError: (e) => toast.error(e instanceof Error ? e.message : "Action failed"),
+  });
+
+  return (
+    <div className="mt-8 rounded-2xl border border-border bg-card p-5">
+      <div className="flex items-center justify-between gap-3 mb-4 flex-wrap">
+        <h2 className="text-lg font-semibold flex items-center gap-2"><Users className="size-5 text-primary" /> Student Directory</h2>
+        <form
+          onSubmit={(e) => { e.preventDefault(); setQuery(search.trim()); }}
+          className="flex items-center gap-2 rounded-full bg-muted px-3 flex-1 max-w-sm"
+        >
+          <Search className="size-4 text-muted-foreground" />
+          <input
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Search by name, email or register number…"
+            className="flex-1 bg-transparent text-sm outline-none py-2"
+          />
+          {query && (
+            <button type="button" onClick={() => { setSearch(""); setQuery(""); }} className="text-xs text-muted-foreground hover:text-foreground">Clear</button>
+          )}
+        </form>
+      </div>
+
+      {usersQ.isLoading ? (
+        <Loading />
+      ) : users.length === 0 ? (
+        <Empty text={query ? `No members match "${query}".` : "No members found."} />
+      ) : (
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="text-left text-xs uppercase tracking-wider text-muted-foreground border-b border-border">
+                <th className="py-2 pr-3">Name</th>
+                <th className="py-2 pr-3">Email</th>
+                <th className="py-2 pr-3">Reg. No</th>
+                <th className="py-2 pr-3">Role</th>
+                <th className="py-2 pr-3">State</th>
+                <th className="py-2 pr-3 text-right">Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              {users.map((u) => {
+                const banned = u.accountState === "BANNED";
+                const isAdmin = u.role === "ADMIN";
+                return (
+                  <tr key={u.id} className="border-b border-border/60 hover:bg-muted/40">
+                    <td className="py-2.5 pr-3">
+                      <a href={`/profile/${u.id}`} className="flex items-center gap-2 font-medium hover:text-primary">
+                        <img src={avatarUrl(u.profilePictureUrl, u.id)} alt="" className="size-7 rounded-full object-cover" />
+                        {u.name}
+                      </a>
+                    </td>
+                    <td className="py-2.5 pr-3 text-muted-foreground">{u.email}</td>
+                    <td className="py-2.5 pr-3 text-muted-foreground">{u.registerNumber ?? "—"}</td>
+                    <td className="py-2.5 pr-3">{titleCase(u.role)}</td>
+                    <td className="py-2.5 pr-3">
+                      <span className={`text-[10px] uppercase rounded-full px-2 py-0.5 ${banned ? "bg-destructive/15 text-destructive" : "bg-success/15 text-success"}`}>
+                        {u.accountState ?? "ACTIVE"}
+                      </span>
+                    </td>
+                    <td className="py-2.5 pr-3 text-right">
+                      {isAdmin ? (
+                        <span className="text-xs text-muted-foreground">—</span>
+                      ) : banned ? (
+                        <Button size="sm" variant="outline" className="rounded-full" disabled={ban.isPending}
+                          onClick={() => ban.mutate({ id: u.id, banned: false })}>
+                          Unban
+                        </Button>
+                      ) : (
+                        <Button size="sm" className="rounded-full bg-destructive text-white hover:opacity-95" disabled={ban.isPending}
+                          onClick={() => {
+                            if (confirm(`Ban ${u.name}? They will be blocked from the platform immediately.`)) {
+                              ban.mutate({ id: u.id, banned: true });
+                            }
+                          }}>
+                          <Ban className="size-3.5" /> Ban Student
+                        </Button>
+                      )}
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </div>
   );
 }
 

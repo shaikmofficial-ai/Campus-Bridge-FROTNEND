@@ -13,6 +13,7 @@ import {
 import { GraduationCap, Mail, Linkedin, Github, Globe, Award, Loader2, AlertCircle, Camera, Building2 } from "lucide-react";
 import { mentorApi, profileApi } from "@/lib/api/campus";
 import { updateCachedUser } from "@/lib/auth";
+import { PriChart } from "@/components/pri-chart";
 import { avatarUrl, titleCase } from "@/lib/ui";
 import type { MentorResponse, ProfileResponse, ProfileUpdatePayload } from "@/lib/api/types";
 
@@ -122,6 +123,13 @@ function Profile() {
 
           {/* Students Placed Under Guidance — mentor only */}
           {isMentor && <PlacementTracker mentorUserId={p.id} canManage />}
+
+          {/* PRI growth chart — students only */}
+          {p.role === "STUDENT" && (
+            <div className="mt-6">
+              <PriChart userId={p.id} />
+            </div>
+          )}
 
           <div className="mt-6 grid lg:grid-cols-3 gap-5">
             <div className="lg:col-span-2 space-y-5">

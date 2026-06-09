@@ -32,6 +32,8 @@ import type {
   ResourceItem,
   StudentResponse,
   TrendingArticle,
+  Snapshot,
+  PublicProfile,
 } from "./types";
 
 // ---------------- Auth ----------------
@@ -55,6 +57,7 @@ export const dashboardApi = {
 export const profileApi = {
   me: () => apiFetch<ProfileResponse>("/api/profile"),
   byId: (id: number) => apiFetch<ProfileResponse>(`/api/profile/${id}`),
+  publicById: (id: number) => apiFetch<PublicProfile>(`/api/profile/${id}/public`),
   update: (payload: ProfileUpdatePayload) =>
     apiFetch<ProfileResponse>("/api/profile", { method: "PUT", body: payload }),
   uploadPicture: (file: File) => {
@@ -222,4 +225,15 @@ export const adminApi = {
   resolveReport: (id: number) => apiFetch<ReportItem>(`/api/admin/reports/${id}/resolve`, { method: "POST" }),
   deleteForumPost: (id: number) => apiFetch(`/api/admin/forum/posts/${id}`, { method: "DELETE" }),
   deleteResource: (id: number) => apiFetch(`/api/admin/resources/${id}`, { method: "DELETE" }),
+  // Student directory + ban system
+  users: () => apiFetch<ProfileResponse[]>("/api/admin/users"),
+  searchUsers: (query: string) =>
+    apiFetch<ProfileResponse[]>("/api/admin/users/search", { query: { query } }),
+  banUser: (id: number) => apiFetch<ProfileResponse>(`/api/admin/users/${id}/ban`, { method: "POST" }),
+  unbanUser: (id: number) => apiFetch<ProfileResponse>(`/api/admin/users/${id}/unban`, { method: "POST" }),
+};
+
+// ---------------- Analytics (PRI growth) ----------------
+export const analyticsApi = {
+  snapshots: (userId: number) => apiFetch<Snapshot[]>(`/api/analytics/snapshots/${userId}`),
 };
