@@ -14,17 +14,20 @@ export const Route = createFileRoute("/profile/$userId")({
 
 function PublicProfilePage() {
   const { userId } = useParams({ from: "/profile/$userId" });
-  const id = Number(userId);
-  const me = getUser();
+  const targetId = Number(userId);
+  const loggedInUser = getUser();
 
-  // If you navigate to your own id, this is still read-only; editing lives at /profile.
-  const isSelf = me?.id === id;
+  // Read-only unless you're viewing your own portfolio. We never default to the
+  // session user — data is always fetched by the URL path id.
+  const isOwner = loggedInUser?.id === targetId;
 
   const { data: p, isLoading, isError, error } = useQuery({
-    queryKey: ["public-profile", id],
-    queryFn: () => profileApi.publicById(id),
-    enabled: !Number.isNaN(id),
+    queryKey: ["public-profile", targetId],
+    queryFn: () => profileApi.publicById(targetId),
+    enabled: !Number.isNaN(targetId),
   });
+
+  const isSelf = isOwner;
 
   return (
     <AppShell>

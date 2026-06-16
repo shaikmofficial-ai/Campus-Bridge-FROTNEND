@@ -60,7 +60,7 @@ export const dashboardApi = {
 export const profileApi = {
   me: () => apiFetch<ProfileResponse>("/api/profile"),
   byId: (id: number) => apiFetch<ProfileResponse>(`/api/profile/${id}`),
-  publicById: (id: number) => apiFetch<PublicProfile>(`/api/profile/${id}/public`),
+  publicById: (id: number) => apiFetch<PublicProfile>(`/api/users/portfolio/${id}`),
   update: (payload: ProfileUpdatePayload) =>
     apiFetch<ProfileResponse>("/api/profile", { method: "PUT", body: payload }),
   uploadPicture: (file: File) => {
