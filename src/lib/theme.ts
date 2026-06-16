@@ -6,9 +6,13 @@ export const THEMES = [
   { id: "minimal", label: "Minimal Black", description: "Matte black, white outlines.", swatch: ["#0a0a0a", "#ffffff", "#525252"] },
   { id: "college", label: "College Classic", description: "Cream + maroon. Academic feel.", swatch: ["#fdf6e3", "#9b1c2c", "#7c1d1d"] },
   { id: "cyber", label: "Cyber Neon", description: "Navy + neon glow. Tron / gaming.", swatch: ["#05070f", "#22d3ee", "#ec4899"] },
+  { id: "festive", label: "Festive (Diwali)", description: "Deep maroon, gold & amber glow.", swatch: ["#1a0b1e", "#f59e0b", "#ec4899"] },
 ] as const;
 
 export type ThemeId = (typeof THEMES)[number]["id"];
+
+/** Themes whose surfaces are dark — toggles Tailwind's `.dark` variant. */
+const DARK_THEMES: ThemeId[] = ["dark", "minimal", "cyber", "festive"];
 
 const KEY = "cb-theme";
 export const DEFAULT_THEME: ThemeId = "ocean";
@@ -23,8 +27,7 @@ export function applyTheme(theme: ThemeId) {
   if (typeof document === "undefined") return;
   document.documentElement.setAttribute("data-theme", theme);
   // Toggle Tailwind .dark variant for themes with dark surfaces
-  const isDark = theme === "dark" || theme === "minimal" || theme === "cyber";
-  document.documentElement.classList.toggle("dark", isDark);
+  document.documentElement.classList.toggle("dark", DARK_THEMES.includes(theme));
   try { window.localStorage.setItem(KEY, theme); } catch {}
   window.dispatchEvent(new CustomEvent("themechange", { detail: theme }));
 }

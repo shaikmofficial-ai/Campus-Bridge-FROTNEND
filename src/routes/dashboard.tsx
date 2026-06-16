@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Users, BookOpen, MessagesSquare, Trophy, Calendar, ArrowUpRight, Rocket, Loader2, AlertCircle } from "lucide-react";
 import { dashboardApi, mentorApi, profileApi } from "@/lib/api/campus";
 import { TrendingTutorials } from "@/components/trending-tutorials";
+import { AvatarLink } from "@/components/avatar-link";
 import { avatarUrl, formatDate, titleCase } from "@/lib/ui";
 import type { ProfileResponse } from "@/lib/api/types";
 
@@ -98,7 +99,9 @@ function Dashboard() {
               <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
                 {data.recommendedMentors.map((m: ProfileResponse) => (
                   <div key={m.id} className="rounded-2xl border border-border bg-card p-5 text-center">
-                    <img src={avatarUrl(m.profilePictureUrl, m.id)} alt={m.name} className="size-20 rounded-full object-cover mx-auto" />
+                    <div className="flex justify-center">
+                      <AvatarLink userId={m.id} picture={m.profilePictureUrl} seed={m.id} size={160} className="size-20 rounded-full" />
+                    </div>
                     <div className="mt-3 font-semibold">{m.name}</div>
                     <div className="text-xs text-muted-foreground">{titleCase(m.role)}</div>
                     <div className="text-[11px] text-muted-foreground">{m.department ?? ""}</div>

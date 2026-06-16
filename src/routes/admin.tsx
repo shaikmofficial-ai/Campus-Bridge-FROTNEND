@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -9,6 +9,7 @@ import {
   BookOpen, MessagesSquare, Briefcase, Trash2, Search, Ban,
 } from "lucide-react";
 import { adminApi } from "@/lib/api/campus";
+import { AvatarLink } from "@/components/avatar-link";
 import { avatarUrl, timeAgo, titleCase } from "@/lib/ui";
 import type { ProfileResponse, ReportItem } from "@/lib/api/types";
 
@@ -107,7 +108,7 @@ function Admin() {
             <ul className="space-y-3">
               {pending.map((u: ProfileResponse) => (
                 <li key={u.id} className="flex items-center gap-3 rounded-xl bg-surface p-3">
-                  <img src={avatarUrl(u.profilePictureUrl, u.id)} alt="" className="size-10 rounded-full object-cover" />
+                  <AvatarLink userId={u.id} picture={u.profilePictureUrl} seed={u.id} size={80} className="size-10 rounded-full" />
                   <div className="flex-1 min-w-0">
                     <div className="font-medium text-sm truncate">{u.name}</div>
                     <div className="text-xs text-muted-foreground truncate">
@@ -257,10 +258,10 @@ function StudentDirectory() {
                 return (
                   <tr key={u.id} className="border-b border-border/60 hover:bg-muted/40">
                     <td className="py-2.5 pr-3">
-                      <a href={`/profile/${u.id}`} className="flex items-center gap-2 font-medium hover:text-primary">
+                      <Link to="/profile/$userId" params={{ userId: String(u.id) }} className="flex items-center gap-2 font-medium hover:text-primary">
                         <img src={avatarUrl(u.profilePictureUrl, u.id)} alt="" className="size-7 rounded-full object-cover" />
                         {u.name}
-                      </a>
+                      </Link>
                     </td>
                     <td className="py-2.5 pr-3 text-muted-foreground">{u.email}</td>
                     <td className="py-2.5 pr-3 text-muted-foreground">{u.registerNumber ?? "—"}</td>

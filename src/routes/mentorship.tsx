@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 import { mentorApi, messageApi, studentApi } from "@/lib/api/campus";
 import { getUser } from "@/lib/auth";
+import { AvatarLink } from "@/components/avatar-link";
 import { avatarUrl } from "@/lib/ui";
 import type { MentorConnection, MentorResponse, StudentResponse } from "@/lib/api/types";
 
@@ -221,7 +222,7 @@ function Mentorship() {
                 : { name: c.mentorName, email: c.mentorEmail, id: c.mentorId, pic: c.mentorProfilePicture };
               return (
                 <div key={c.id} className="rounded-2xl border border-border bg-card p-5 flex items-center gap-3">
-                  <img src={avatarUrl(other.pic, other.email)} alt="" className="size-12 rounded-full object-cover" />
+                  <AvatarLink userId={other.id} picture={other.pic} seed={other.email} size={120} className="size-12 rounded-full" />
                   <div className="flex-1 min-w-0">
                     <div className="font-semibold text-sm truncate">{other.name}</div>
                     <span className={`text-[10px] uppercase rounded-full px-2 py-0.5 ${c.status === "ACCEPTED" ? "bg-success/15 text-success" : c.status === "PENDING" ? "bg-warning/15 text-warning" : "bg-destructive/15 text-destructive"}`}>{c.status}</span>
@@ -277,7 +278,7 @@ function Mentorship() {
               {(studentsQ.data ?? []).map((s: StudentResponse) => (
                 <div key={s.id} className="rounded-2xl border border-border bg-card p-5 hover:shadow-elegant transition-all">
                   <div className="flex items-start gap-3">
-                    <img src={avatarUrl(s.profilePictureUrl, s.email)} alt="" className="size-12 rounded-full object-cover ring-2 ring-card" />
+                    <AvatarLink userId={s.id} picture={s.profilePictureUrl} seed={s.email} size={120} className="size-12 rounded-full ring-2 ring-card" />
                     <div className="flex-1 min-w-0">
                       <div className="font-semibold leading-tight truncate">{s.name}</div>
                       <div className="text-xs text-muted-foreground truncate">
@@ -329,7 +330,7 @@ function Mentorship() {
                   {leaderboard.map((r, i) => (
                     <div key={r.m.id} className="flex items-center gap-4 py-3.5 first:pt-0 last:pb-0">
                       <div className={`size-8 grid place-items-center rounded-lg font-bold text-sm ${i === 0 ? "bg-gradient-primary text-primary-foreground" : "bg-muted text-foreground"}`}>{i + 1}</div>
-                      <img src={avatarUrl(r.m.profilePicture, r.m.id)} alt="" className="size-11 rounded-full object-cover" />
+                      <AvatarLink userId={r.m.id} picture={r.m.profilePicture} seed={r.m.id} size={120} className="size-11 rounded-full" />
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 flex-wrap">
                           <div className="font-semibold text-sm truncate">{r.m.name}</div>
@@ -415,7 +416,7 @@ function Mentorship() {
                       <div className={`absolute inset-x-0 top-0 h-1 rounded-t-2xl bg-gradient-to-r ${t.bg}`} />
                       <div className="flex items-start gap-3">
                         <div className="relative">
-                          <img src={avatarUrl(m.profilePicture, m.id)} alt="" className="size-14 rounded-full object-cover ring-2 ring-card" />
+                          <AvatarLink userId={m.id} picture={m.profilePicture} seed={m.id} size={120} className="size-14 rounded-full ring-2 ring-card" />
                           <div className={`absolute -bottom-1 -right-1 size-6 grid place-items-center rounded-full bg-card ring-2 ring-card ${t.text}`}>
                             <t.icon className="size-3.5" />
                           </div>

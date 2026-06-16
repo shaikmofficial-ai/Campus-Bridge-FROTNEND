@@ -13,6 +13,7 @@ import {
 import { Globe, Lock, MessageCircle, Eye, Plus, Loader2, AlertCircle, ArrowLeft, Users } from "lucide-react";
 import { forumApi, profileApi } from "@/lib/api/campus";
 import { ReportButton } from "@/components/report-button";
+import { AvatarLink } from "@/components/avatar-link";
 import { avatarUrl, timeAgo } from "@/lib/ui";
 import type { ForumComment, ForumGroup, ForumPost } from "@/lib/api/types";
 
@@ -169,7 +170,14 @@ function PostRow({ post: p, onClick }: { post: ForumPost; onClick: () => void })
       onKeyDown={(e) => { if (e.key === "Enter") onClick(); }}
       className="w-full text-left rounded-2xl border border-border bg-card p-5 flex items-center gap-4 hover:shadow-soft transition-shadow cursor-pointer"
     >
-      <img src={avatarUrl(p.author?.profilePictureUrl, p.author?.id ?? p.id)} alt="" className="size-11 rounded-full object-cover" />
+      <AvatarLink
+        userId={p.author?.id ?? null}
+        picture={p.author?.profilePictureUrl}
+        seed={p.author?.id ?? p.id}
+        size={120}
+        className="size-11 rounded-full"
+        stopPropagation
+      />
       <div className="flex-1 min-w-0">
         {p.category && (
           <span className="text-[10px] uppercase tracking-wider rounded-full bg-accent text-primary px-2 py-0.5">{p.category}</span>
@@ -392,7 +400,13 @@ function CommentDialog({ post, onClose, canWrite }: { post: ForumPost | null; on
             <div className="space-y-3 max-h-56 overflow-y-auto pr-1">
               {comments.map((c: ForumComment) => (
                 <div key={c.id} className="flex gap-3">
-                  <img src={avatarUrl(c.authorProfilePictureUrl, c.authorId ?? c.id)} alt="" className="size-8 rounded-full object-cover shrink-0" />
+                  <AvatarLink
+                    userId={c.authorId ?? null}
+                    picture={c.authorProfilePictureUrl}
+                    seed={c.authorId ?? c.id}
+                    size={80}
+                    className="size-8 rounded-full"
+                  />
                   <div className="rounded-2xl bg-surface px-3 py-2 flex-1">
                     <div className="text-xs font-medium">{c.authorName ?? "Unknown"} <span className="text-muted-foreground font-normal">· {timeAgo(c.createdAt)}</span></div>
                     <div className="text-sm text-foreground/90 whitespace-pre-wrap">{c.content}</div>
