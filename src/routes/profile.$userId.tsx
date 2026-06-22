@@ -13,18 +13,22 @@ export const Route = createFileRoute("/profile/$userId")({
 });
 
 function PublicProfilePage() {
+  // Read the explicit peer id straight from the URL path.
   const { userId } = useParams({ from: "/profile/$userId" });
   const targetId = Number(userId);
   const loggedInUser = getUser();
 
-  // Read-only unless you're viewing your own portfolio. We never default to the
-  // session user — data is always fetched by the URL path id.
-  const isOwner = loggedInUser?.id === targetId;
+  // Per spec: owner only when there's no userId in the path, or it matches the
+  // logged-in session id. Otherwise it's a read-only peer portfolio. Data is
+  // ALWAYS hydrated from the URL id below — never the session user.
+  const isOwner = !userId || loggedInUser?.id === Number(userId);
 
   const { data: p, isLoading, isError, error } = useQuery({
+    // Keyed by the target id so each peer loads their own dataset (no caching
+    // collisions with the logged-in user's profile query).
     queryKey: ["public-profile", targetId],
     queryFn: () => profileApi.publicById(targetId),
-    enabled: !Number.isNaN(targetId),
+    enabled: Number.isFinite(targetId) && targetId > 0,
   });
 
   const isSelf = isOwner;
