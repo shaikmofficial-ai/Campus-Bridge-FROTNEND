@@ -252,3 +252,15 @@ export const learningApi = {
 export const leaderboardApi = {
   global: () => apiFetch<LeaderboardEntry[]>("/api/leaderboard/global"),
 };
+
+
+// ---------------- AI Assistant (Gemini) ----------------
+export type AiActionType = "resume" | "roadmap" | "interview" | "internships" | "skills" | "chat";
+
+export const aiApi = {
+  action: (actionType: AiActionType, message?: string) =>
+    apiFetch<{ result: string; actionType: string }>("/api/ai/action", {
+      method: "POST",
+      body: { actionType, message },
+    }),
+};

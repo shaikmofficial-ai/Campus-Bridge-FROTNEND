@@ -1,5 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import {
@@ -11,6 +11,8 @@ import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { TrendingTutorials } from "@/components/trending-tutorials";
 import { AvatarLink } from "@/components/avatar-link";
+import { AiActionModal, AiChatModal } from "@/components/ai-assistant";
+import type { AiActionType } from "@/lib/api/campus";
 import {
   TrendingUp, Target, BrainCircuit, Sparkles, Mail, ArrowRight,
   Trophy, Crown, Award, Star, Flame, Shield, FileText, Map, Briefcase,
@@ -144,13 +146,16 @@ function Dashboard() {
     { icon: Target, label: "Dream Company", value: drive?.companyName ?? "Zoho", sub: "Readiness: 62%", iconClr: "text-destructive" },
   ]), [points, leaderboardQ.data, me?.id, drive]);
 
-  const aiActions = [
-    { icon: FileText, label: "Improve my Resume", to: "/resources" },
-    { icon: Map, label: "Suggest a Roadmap", to: "/learn" },
-    { icon: Briefcase, label: "Find Internships", to: "/placements" },
-    { icon: MessageSquare, label: "Prepare for Interviews", to: "/forum" },
-    { icon: Wand2, label: "Recommend Skills", to: "/learn" },
-  ] as const;
+  const aiActions: { icon: any; label: string; action: AiActionType }[] = [
+    { icon: FileText, label: "Improve my Resume", action: "resume" },
+    { icon: Map, label: "Suggest a Roadmap", action: "roadmap" },
+    { icon: Briefcase, label: "Find Internships", action: "internships" },
+    { icon: MessageSquare, label: "Prepare for Interviews", action: "interview" },
+    { icon: Wand2, label: "Recommend Skills", action: "skills" },
+  ];
+
+  const [aiAction, setAiAction] = useState<AiActionType | null>(null);
+  const [chatOpen, setChatOpen] = useState(false);
 
   if (isLoading) {
     return (
@@ -467,16 +472,16 @@ function Dashboard() {
             <div className="text-[11px] text-muted-foreground mt-4 mb-2">How can I help you today?</div>
             <div className="space-y-1.5">
               {aiActions.map((a) => (
-                <Link key={a.label} to={a.to}
+                <button key={a.label} onClick={() => setAiAction(a.action)}
                   className="w-full flex items-center gap-3 rounded-xl border border-border hover:border-primary/30 hover:bg-accent/40 px-3 py-2.5 text-[13px] font-medium text-left transition-colors">
                   <a.icon className="size-4 text-primary" />
                   <span className="flex-1">{a.label}</span>
                   <ArrowUpRight className="size-3.5 text-muted-foreground" />
-                </Link>
+                </button>
               ))}
             </div>
-            <Button asChild className="w-full mt-4 rounded-xl bg-gradient-primary text-primary-foreground hover:opacity-95 shadow-elegant">
-              <Link to="/forum"><Sparkles className="size-4 mr-1.5" /> Chat with AI</Link>
+            <Button onClick={() => setChatOpen(true)} className="w-full mt-4 rounded-xl bg-gradient-primary text-primary-foreground hover:opacity-95 shadow-elegant">
+              <Sparkles className="size-4 mr-1.5" /> Chat with AI
             </Button>
           </div>
 
@@ -496,6 +501,10 @@ function Dashboard() {
           </div>
         </aside>
       </div>
+
+      {/* AI assistant modals */}
+      <AiActionModal action={aiAction} open={aiAction !== null} onOpenChange={(v) => { if (!v) setAiAction(null); }} />
+      <AiChatModal open={chatOpen} onOpenChange={setChatOpen} />
     </AppShell>
   );
 }
